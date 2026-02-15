@@ -149,9 +149,17 @@
                             ${results.map((result, index) => {
                                 const position = result.position || (index + 1);
                                 const isWinner = result.is_winner;
+                                
+                                // Format position with ordinal suffix (1st, 2nd, 3rd, etc.)
+                                let positionDisplay;
+                                if (position === 1) positionDisplay = '1st';
+                                else if (position === 2) positionDisplay = '2nd';
+                                else if (position === 3) positionDisplay = '3rd';
+                                else positionDisplay = position + 'th';
+                                
                                 return `
                                     <tr ${isWinner ? 'style="background-color: #fff3cd;"' : ''}>
-                                        <td><strong>${position}${isWinner ? ' 👑' : ''}</strong></td>
+                                        <td><strong>${positionDisplay}${isWinner ? ' 👑' : ''}</strong></td>
                                         <td>${result.student_name}</td>
                                         <td>${result.roll_number}</td>
                                         <td>${result.grade}</td>
