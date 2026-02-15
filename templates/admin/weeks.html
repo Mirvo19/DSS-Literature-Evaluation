@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Weeks - DSS Talk Admin</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="page-wrapper">
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <a href="/admin/dashboard" class="logo">DSS Talk Admin</a>
+                    <nav class="nav-menu">
+                        <div class="nav-item">
+                            <a href="/admin/dashboard" class="nav-link" data-i18n="back">Back</a>
+                        </div>
+                        <div class="nav-item">
+                            <a href="/admin/logs" class="nav-link">Admin Logs</a>
+                        </div>
+                        <div class="nav-item">
+                            <button id="logoutBtn" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </header>
+        
+        <main class="content-wrapper">
+            <div class="container">
+                <div class="flex-between mb-3">
+                    <h1 data-i18n="manageWeeks">Manage Weeks</h1>
+                    <button onclick="showModal('addWeekModal')" class="btn btn-success" data-i18n="createWeek">Create Week</button>
+                </div>
+                
+                <div class="card">
+                    <div id="weeksTableArea">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Add Week Modal -->
+    <div id="addWeekModal" class="modal-overlay">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 class="modal-title" data-i18n="createWeek">Create Week</h3>
+                <button class="modal-close" onclick="hideModal('addWeekModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addWeekForm">
+                    <div class="form-group">
+                        <label class="form-label">Event</label>
+                        <input type="text" id="weekEventDisplay" class="form-input" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Session</label>
+                        <select id="weekSession" class="form-select" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="weekNumber">Week Number</label>
+                        <input type="number" id="weekNumber" class="form-input" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="topic">Topic</label>
+                        <input type="text" id="weekTopic" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="date">Date</label>
+                        <input type="date" id="weekDate" class="form-input">
+                    </div>
+                    
+                    <hr>
+                    <h4>Participant Selection</h4>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Selection Mode</label>
+                        <select id="participantMode" class="form-select">
+                            <option value="none">No participants (add later)</option>
+                            <option value="random">Random Selection     </option>
+                            <option value="manual">Manual Selection</option>
+                        </select>
+                    </div>
+                    
+                    <div id="randomOptions" class="hidden">
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="participantCount">Number of Participants</label>
+                            <input type="number" id="participantCount" class="form-input" value="5" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="gradeFilter">Grade Filter (Optional)</label>
+                            <select id="gradeFilter" class="form-select">
+                                <option value="">All Grades</option>
+                                <option value="11">Grade 11</option>
+                                <option value="12">Grade 12</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="resetIfInsufficient">
+                                <span data-i18n="resetIfInsufficient">Reset session if insufficient students</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div id="manualOptions" class="hidden">
+                        <div class="form-group">
+                            <label class="form-label">Select Students</label>
+                            <div id="studentCheckboxes" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); padding: 1rem; border-radius: var(--border-radius);"></div>
+                        </div>
+                    </div>
+                </form>
+                
+                <div id="weekCreationResult"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideModal('addWeekModal')" data-i18n="cancel">Cancel</button>
+                <button id="saveWeekBtn" class="btn btn-primary" data-i18n="save">Save</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Participants Modal -->
+    <div id="editParticipantsModal" class="modal-overlay">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Participants</h3>
+                <button class="modal-close" onclick="hideModal('editParticipantsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editWeekId">
+                <input type="hidden" id="editSessionId">
+                <div class="mb-3">
+                    <h4>Week: <span id="editWeekInfo"></span></h4>
+                </div>
+                
+                <h5>Current Participants</h5>
+                <div id="currentParticipantsArea" class="mb-3">
+                    <div class="spinner"></div>
+                </div>
+                
+                <hr>
+                
+                <h5>Add Participants</h5>
+                
+                <div class="form-group">
+                    <label class="form-label">Selection Mode</label>
+                    <select id="addParticipantMode" class="form-select">
+                        <option value="manual">Manual Selection</option>
+                        <option value="random">Random Selection (Extempore)</option>
+                    </select>
+                </div>
+                
+                <div id="manualAddOptions">
+                    <div class="form-group">
+                        <label class="form-label">Select Students to Add</label>
+                        <div id="availableStudents" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); padding: 1rem; border-radius: var(--border-radius);">
+                        </div>
+                    </div>
+                    <button id="addParticipantsBtn" class="btn btn-primary">Add Selected Students</button>
+                </div>
+                
+                <div id="randomAddOptions" class="hidden">
+                    <div class="form-group">
+                        <label class="form-label">Number of Participants to Add</label>
+                        <input type="number" id="addParticipantCount" class="form-input" value="5" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Grade Filter (Optional)</label>
+                        <select id="addGradeFilter" class="form-select">
+                            <option value="">All Grades</option>
+                            <option value="11">Grade 11</option>
+                            <option value="12">Grade 12</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="addResetIfInsufficient">
+                            <span>Reset session if insufficient students</span>
+                        </label>
+                    </div>
+                    <button id="addRandomParticipantsBtn" class="btn btn-primary">Add Random Participants</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideModal('editParticipantsModal')">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+    </div>
+    
+    <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/admin.js"></script>
+    <script>
+        let allWeeks = [];
+        let allStudents = [];
+        
+        async function loadWeeks() {
+            showLoading();
+            try {
+                allWeeks = await adminPanel.loadWeeks();
+                displayWeeks(allWeeks);
+            } catch (error) {
+                showAlert('Failed to load weeks: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        function displayWeeks(weeks) {
+            const area = document.getElementById('weeksTableArea');
+            
+            if (!weeks || weeks.length === 0) {
+                area.innerHTML = '<p class="text-center">No weeks found</p>';
+                return;
+            }
+            
+            area.innerHTML = `
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>${i18n.t('weekNumber')}</th>
+                                <th>Session</th>
+                                <th>${i18n.t('eventName')}</th>
+                                <th>${i18n.t('topic')}</th>
+                                <th>${i18n.t('date')}</th>
+                                <th>Status</th>
+                                <th>${i18n.t('actions')}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${weeks.map(w => `
+                                <tr>
+                                    <td>${w.week_number}</td>
+                                    <td>${w.sessions.name} (#${w.sessions.session_number})</td>
+                                    <td>${w.sessions.events.name}</td>
+                                    <td>${w.topic || '-'}</td>
+                                    <td>${w.date ? new Date(w.date).toLocaleDateString() : '-'}</td>
+                                    <td>
+                                        ${w.is_partial ? '<span class="badge badge-warning">Partial</span>' : '<span class="badge badge-success">Complete</span>'}
+                                    </td>
+                                    <td>
+                                        <button onclick="editParticipants('${w.id}')" class="btn btn-sm btn-primary">Participants</button>
+                                        <button onclick="deleteWeek('${w.id}')" class="btn btn-sm btn-danger">${i18n.t('delete')}</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        async function deleteWeek(weekId) {
+            if (!confirm(i18n.t('confirmDelete'))) return;
+            
+            showLoading();
+            try {
+                await adminPanel.deleteWeek(weekId);
+                showAlert('Week deleted successfully', 'success');
+                await loadWeeks();
+            } catch (error) {
+                showAlert('Failed to delete week: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        let currentEditWeek = null;
+        
+        // Toggle between manual and random participant addition
+        document.getElementById('addParticipantMode').addEventListener('change', (e) => {
+            const mode = e.target.value;
+            document.getElementById('manualAddOptions').classList.toggle('hidden', mode !== 'manual');
+            document.getElementById('randomAddOptions').classList.toggle('hidden', mode !== 'random');
+        });
+        
+        async function editParticipants(weekId) {
+            showLoading();
+            try {
+                const response = await fetch(`/admin/api/weeks/${weekId}`, {
+                    headers: auth.getAuthHeaders()
+                });
+                
+                if (!response.ok) throw new Error('Failed to load week details');
+                
+                const data = await response.json();
+                currentEditWeek = data.week;
+                
+                document.getElementById('editWeekId').value = weekId;
+                document.getElementById('editSessionId').value = currentEditWeek.session_id;
+                document.getElementById('editWeekInfo').textContent = 
+                    `Week ${currentEditWeek.week_number} - ${currentEditWeek.topic || 'No Topic'}`;
+                
+                displayCurrentParticipants(currentEditWeek.participants || []);
+                displayAvailableStudents(currentEditWeek.participants || []);
+                
+                showModal('editParticipantsModal');
+            } catch (error) {
+                showAlert('Failed to load participants: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        function displayCurrentParticipants(participants) {
+            const area = document.getElementById('currentParticipantsArea');
+            
+            if (!participants || participants.length === 0) {
+                area.innerHTML = '<p>No participants yet</p>';
+                return;
+            }
+            
+            area.innerHTML = `
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Grade</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${participants.map(p => `
+                                <tr>
+                                    <td>${p.students.full_name}</td>
+                                    <td>${p.students.grade || '-'}</td>
+                                    <td>
+                                        <button onclick="removeParticipant('${p.id}')" class="btn btn-sm btn-danger">Remove</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        function displayAvailableStudents(currentParticipants) {
+            const participantIds = new Set(currentParticipants.map(p => p.student_id));
+            const available = allStudents.filter(s => s.is_active && !participantIds.has(s.id));
+            
+            const container = document.getElementById('availableStudents');
+            
+            if (available.length === 0) {
+                container.innerHTML = '<p>All active students are already participants</p>';
+                return;
+            }
+            
+            container.innerHTML = available.map(s => `
+                <label style="display: block; margin-bottom: 0.5rem;">
+                    <input type="checkbox" name="newParticipant" value="${s.id}">
+                    ${s.full_name} ${s.grade ? `(Grade ${s.grade})` : ''}
+                </label>
+            `).join('');
+        }
+        
+        async function removeParticipant(participantId) {
+            if (!confirm('Remove this participant?')) return;
+            
+            showLoading();
+            try {
+                await adminPanel.removeParticipant(participantId);
+                showAlert('Participant removed successfully', 'success');
+                
+                // Reload participants
+                await editParticipants(currentEditWeek.id);
+                await loadWeeks();
+            } catch (error) {
+                showAlert('Failed to remove participant: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        document.getElementById('addParticipantsBtn').addEventListener('click', async () => {
+            const selected = Array.from(document.querySelectorAll('input[name="newParticipant"]:checked'))
+                .map(cb => cb.value);
+            
+            if (selected.length === 0) {
+                showAlert('Please select at least one student', 'error');
+                return;
+            }
+            
+            showLoading();
+            try {
+                for (const studentId of selected) {
+                    await adminPanel.addParticipant({
+                        week_id: currentEditWeek.id,
+                        student_id: studentId
+                    });
+                }
+                
+                showAlert(`Added ${selected.length} participant(s) successfully`, 'success');
+                
+                // Reload participants
+                await editParticipants(currentEditWeek.id);
+                await loadWeeks();
+            } catch (error) {
+                showAlert('Failed to add participants: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+        
+        // Add random participants
+        document.getElementById('addRandomParticipantsBtn').addEventListener('click', async () => {
+            const weekId = currentEditWeek.id;
+            const sessionId = document.getElementById('editSessionId').value;
+            const participantCount = parseInt(document.getElementById('addParticipantCount').value);
+            const gradeValue = document.getElementById('addGradeFilter').value;
+            const gradeFilter = gradeValue ? parseInt(gradeValue) : null;
+            const resetIfInsufficient = document.getElementById('addResetIfInsufficient').checked;
+            
+            if (!participantCount || participantCount < 1) {
+                showAlert('Please enter a valid number of participants', 'error');
+                return;
+            }
+            
+            showLoading();
+            try {
+                const response = await fetch('/admin/api/weeks/' + weekId + '/add-random-participants', {
+                    method: 'POST',
+                    headers: auth.getAuthHeaders(),
+                    body: JSON.stringify({
+                        participant_count: participantCount,
+                        grade_filter: gradeFilter,
+                        reset_if_insufficient: resetIfInsufficient
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to add random participants');
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(result.message || 'Random participants added successfully', 'success');
+                } else {
+                    showAlert(result.message || 'Failed to add participants', 'warning');
+                }
+                
+                // Reload participants
+                await editParticipants(weekId);
+                await loadWeeks();
+            } catch (error) {
+                showAlert('Failed to add random participants: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+        
+        // Participant mode handler
+        document.getElementById('participantMode').addEventListener('change', async (e) => {
+            const mode = e.target.value;
+            document.getElementById('randomOptions').classList.toggle('hidden', mode !== 'random');
+            document.getElementById('manualOptions').classList.toggle('hidden', mode !== 'manual');
+            
+            if (mode === 'manual') {
+                if (allStudents.length === 0) {
+                    try {
+                        allStudents = await adminPanel.loadStudents();
+                    } catch (error) {
+                        showAlert('Failed to load students: ' + error.message, 'error');
+                        return;
+                    }
+                }
+                displayStudentCheckboxes();
+            }
+        });
+        
+        function displayStudentCheckboxes() {
+            const container = document.getElementById('studentCheckboxes');
+            container.innerHTML = allStudents.filter(s => s.is_active).map(s => `
+                <label style="display: block; margin-bottom: 0.5rem;">
+                    <input type="checkbox" name="studentSelect" value="${s.id}">
+                    ${s.full_name} ${s.grade ? `(Grade ${s.grade})` : ''}
+                </label>
+            `).join('');
+        }
+        
+        // Save Week
+        document.getElementById('saveWeekBtn').addEventListener('click', async () => {
+            const sessionId = document.getElementById('weekSession').value;
+            const weekNumber = document.getElementById('weekNumber').value;
+            const topic = document.getElementById('weekTopic').value;
+            const date = document.getElementById('weekDate').value;
+            const participantMode = document.getElementById('participantMode').value;
+            
+            if (!sessionId || !weekNumber) {
+                showAlert('Please fill required fields', 'error');
+                return;
+            }
+            
+            const weekData = {
+                session_id: sessionId,
+                week_number: parseInt(weekNumber),
+                topic: topic || null,
+                date: date || null,
+                participant_mode: participantMode
+            };
+            
+            // Add mode-specific data
+            if (participantMode === 'random') {
+                weekData.participant_count = parseInt(document.getElementById('participantCount').value);
+                const gradeValue = document.getElementById('gradeFilter').value;
+                weekData.grade_filter = gradeValue ? parseInt(gradeValue) : null;
+                weekData.reset_if_insufficient = document.getElementById('resetIfInsufficient').checked;
+            } else if (participantMode === 'manual') {
+                const selected = Array.from(document.querySelectorAll('input[name="studentSelect"]:checked'))
+                    .map(cb => cb.value);
+                weekData.student_ids = selected;
+            }
+            
+            showLoading();
+            try {
+                const result = await adminPanel.createWeek(weekData);
+                
+                const resultDiv = document.getElementById('weekCreationResult');
+                
+                if (result.selection_result) {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-${result.selection_result.success ? 'success' : 'warning'}">
+                            <p>${result.selection_result.message}</p>
+                            ${result.selection_result.is_partial ? '<p>Week marked as partial</p>' : ''}
+                        </div>
+                    `;
+                }
+                
+                if (!result.selection_result || result.selection_result.success) {
+                    showAlert('Week created successfully', 'success');
+                    setTimeout(() => {
+                        hideModal('addWeekModal');
+                        document.getElementById('addWeekForm').reset();
+                        resultDiv.innerHTML = '';
+                        loadWeeks();
+                    }, 2000);
+                }
+            } catch (error) {
+                showAlert('Failed to create week: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await adminPanel.initialize();
+            
+            // Load students immediately for faster modal interaction
+            try {
+                allStudents = await adminPanel.loadStudents();
+            } catch (error) {
+                console.error('Failed to load students:', error);
+            }
+            
+            // Get selected event from login
+            const selectedEvent = localStorage.getItem('selected_event') || 'debate';
+            const event = adminPanel.events.find(e => e.name.toLowerCase() === selectedEvent.toLowerCase());
+            
+            if (event) {
+                document.getElementById('weekEventDisplay').value = event.name;
+            }
+            
+            // Load sessions - filter by selected event
+            const sessions = await adminPanel.loadSessions();
+            const sessionSelect = document.getElementById('weekSession');
+            const filteredSessions = event ? sessions.filter(s => s.event_id === event.id) : sessions;
+            
+            if (filteredSessions.length === 0) {
+                sessionSelect.innerHTML = '<option value="">No sessions available - Create one first</option>';
+            } else {
+                filteredSessions.forEach(s => {
+                    const option = document.createElement('option');
+                    option.value = s.id;
+                    option.textContent = `${s.name} (#${s.session_number})`;
+                    sessionSelect.appendChild(option);
+                });
+            }
+            
+            await loadWeeks();
+            
+            document.getElementById('logoutBtn').addEventListener('click', async () => {
+                await auth.logout();
+                window.location.href = '/';
+            });
+            
+            i18n.updatePageTexts();
+        });
+    </script>
+</body>
+</html>

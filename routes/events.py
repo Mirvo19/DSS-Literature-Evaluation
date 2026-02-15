@@ -1,0 +1,278 @@
+from flask import Blueprint, request, jsonify, render_template
+from supabase import create_client
+from config import Config
+from utils.auth import require_auth
+
+bp = Blueprint('events', __name__)
+api_bp = Blueprint('events_api', __name__, url_prefix='/api')
+
+# init supabase with service key for accessing judge scores in published results
+supabase = create_client(Config.SUPABASE_URL, Config.SUPABASE_SERVICE_KEY)
+
+# pages
+
+@bp.route('/dashboard')
+def dashboard_page():
+    return render_template('dashboard.html')
+
+@bp.route('/week/<week_id>')
+def week_detail_page(week_id):
+    return render_template('week-detail.html')
+
+@bp.route('/winners')
+def winners_page():
+    return render_template('winners.html')
+
+@bp.route('/week-rankings/<week_id>')
+def week_rankings_page(week_id):
+    return render_template('week-rankings.html')
+
+# api
+
+@api_bp.route('/events', methods=['GET'])
+def get_events():
+    try:
+        response = supabase.table('events').select('*').execute()
+        return jsonify({'events': response.data}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/sessions/<event_id>', methods=['GET'])
+@require_auth
+def get_sessions(event_id):
+    try:
+        response = supabase.table('sessions')\
+            .select('*')\
+            .eq('event_id', event_id)\
+            .eq('is_active', True)\
+            .order('session_number', desc=True)\
+            .execute()
+        
+        return jsonify({'sessions': response.data}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/weeks/<session_id>', methods=['GET'])
+@require_auth
+def get_weeks(session_id):
+    try:
+        response = supabase.table('weeks')\
+            .select('*, sessions!inner(event_id, session_number)')\
+            .eq('session_id', session_id)\
+            .order('week_number', desc=True)\
+            .execute()
+        
+        return jsonify({'weeks': response.data}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/week-detail/<week_id>', methods=['GET'])
+@require_auth
+def get_week_detail(week_id):
+    # code
+    try:
+        # code
+        week_response = supabase.table('weeks')\
+            .select('*, sessions!inner(session_number, name, event_id, events!inner(name, name_nepali))')\
+            .eq('id', week_id)\
+            .single()\
+            .execute()
+        
+        # code
+        participants_response = supabase.table('participants')\
+            .select('*, students!inner(full_name, grade)')\
+            .eq('week_id', week_id)\
+            .order('score', desc=True)\
+            .execute()
+        
+        # code
+        judges_response = supabase.table('week_judges')\
+            .select('*, judges!inner(full_name, title)')\
+            .eq('week_id', week_id)\
+            .execute()
+        
+        # code
+        criteria_response = supabase.table('week_criteria')\
+            .select('*, judging_criteria!inner(name, name_nepali, max_points)')\
+            .eq('week_id', week_id)\
+            .execute()
+        
+        return jsonify({
+            'week': week_response.data,
+            'participants': participants_response.data,
+            'judges': judges_response.data,
+            'criteria': criteria_response.data
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/winners', methods=['GET'])
+def get_winners():
+    """Get weeks that have published winners (not individual participants)"""
+    try:
+        event_id = request.args.get('event_id')
+        limit = request.args.get('limit', 50)
+        
+        # Get weeks that have at least one winner
+        query = supabase.table('weeks')\
+            .select('id, week_number, topic, topic_nepali, date, sessions!inner(session_number, event_id, events!inner(name, name_nepali))')\
+            .order('date', desc=True)\
+            .limit(limit)
+        
+        if event_id:
+            query = query.eq('sessions.event_id', event_id)
+        
+        weeks_response = query.execute()
+        
+        # Filter weeks that have winners
+        weeks_with_winners = []
+        for week in weeks_response.data:
+            # Check if this week has any winners
+            winners_check = supabase.table('participants')\
+                .select('id', count='exact')\
+                .eq('week_id', week['id'])\
+                .eq('is_winner', True)\
+                .execute()
+            
+            if winners_check.count and winners_check.count > 0:
+                weeks_with_winners.append(week)
+        
+        return jsonify({'weeks': weeks_with_winners}), 200
+        
+    except Exception as e:
+        print(f"Error in get_winners: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/week-rankings/<week_id>', methods=['GET'])
+def get_week_rankings(week_id):
+    """Get all participants ranked by position for a specific week"""
+    try:
+        print(f"Getting rankings for week: {week_id}")
+        
+        # Get week info
+        week = supabase.table('weeks')\
+            .select('*, sessions!inner(session_number, events!inner(name, name_nepali))')\
+            .eq('id', week_id)\
+            .single()\
+            .execute()
+        
+        print(f"Week info: {week.data}")
+        
+        # Get all participants with their scores
+        participants = supabase.table('participants')\
+            .select('id, student_id, position, is_winner')\
+            .eq('week_id', week_id)\
+            .execute()
+        
+        print(f"Found {len(participants.data)} participants")
+        
+        # Get student info and scores for each participant
+        results = []
+        for participant in participants.data:
+            print(f"\nProcessing participant: {participant['id']}")
+            
+            # Get student info
+            student = supabase.table('students')\
+                .select('*')\
+                .eq('id', participant['student_id'])\
+                .single()\
+                .execute()
+            
+            # Get all judge scores for this participant
+            scores = supabase.table('judge_scores')\
+                .select('*')\
+                .eq('participant_id', participant['id'])\
+                .execute()
+            
+            print(f"Found {len(scores.data)} scores for participant {participant['id']}")
+            print(f"Scores data: {scores.data}")
+            
+            # Calculate scores by judge type
+            overall_score = None
+            content_score = None
+            style_delivery_score = None
+            language_score = None
+            
+            for score in scores.data:
+                judge_type = score.get('judge_type')
+                score_value = score.get('score')
+                print(f"  Judge type: {judge_type}, Score: {score_value}")
+                
+                if judge_type == 'overall':
+                    overall_score = score_value
+                elif judge_type == 'content':
+                    content_score = score_value
+                elif judge_type == 'style_delivery':
+                    style_delivery_score = score_value
+                elif judge_type == 'language':
+                    language_score = score_value
+            
+            # Calculate total score
+            scores_list = [overall_score, content_score, style_delivery_score, language_score]
+            filtered_scores = list(filter(None, scores_list))
+            total_score = sum(filtered_scores) if filtered_scores else 0
+            
+            print(f"Scores list: {scores_list}")
+            print(f"Filtered scores: {filtered_scores}")
+            print(f"Calculated scores - Overall: {overall_score}, Content: {content_score}, Style/Delivery: {style_delivery_score}, Language: {language_score}, Total: {total_score}")
+            
+            results.append({
+                'position': participant.get('position'),
+                'is_winner': participant.get('is_winner', False),
+                'student_name': student.data.get('full_name') or student.data.get('name', 'Unknown'),
+                'roll_number': student.data.get('roll_number', 'N/A'),
+                'grade': student.data.get('grade', 'N/A'),
+                'overall_score': overall_score,
+                'content_score': content_score,
+                'style_delivery_score': style_delivery_score,
+                'language_score': language_score,
+                'total_score': total_score
+            })
+        
+        # Sort by position
+        results.sort(key=lambda x: x['position'] if x['position'] else 999)
+        
+        print(f"\nReturning {len(results)} results")
+        
+        return jsonify({
+            'week': week.data,
+            'results': results
+        }), 200
+        
+    except Exception as e:
+        print(f"Error in get_week_rankings: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/weeks-by-event/<event_id>', methods=['GET'])
+@require_auth
+def get_weeks_by_event(event_id):
+    # code
+    try:
+        # code
+        sessions_response = supabase.table('sessions')\
+            .select('id')\
+            .eq('event_id', event_id)\
+            .eq('is_active', True)\
+            .execute()
+        
+        if not sessions_response.data:
+            return jsonify({'weeks': []}), 200
+        
+        session_ids = [s['id'] for s in sessions_response.data]
+        
+        # code
+        weeks_response = supabase.table('weeks')\
+            .select('*, sessions!inner(session_number, name)')\
+            .in_('session_id', session_ids)\
+            .order('date', desc=True)\
+            .execute()
+        
+        return jsonify({'weeks': weeks_response.data}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

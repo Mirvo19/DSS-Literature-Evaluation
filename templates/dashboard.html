@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - DSS Talk</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="page-wrapper">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <a href="/dashboard" class="logo">DSS Talk</a>
+                    
+                    <nav class="nav-menu">
+                        <!-- Event Selector -->
+                        <div class="nav-item">
+                            <select id="eventSelect" class="form-select">
+                                <option value="debate" data-i18n="debate">Debate</option>
+                                <option value="presentation" data-i18n="presentation">Presentation</option>
+                                <option value="extempore" data-i18n="extempore">Extempore</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Language Selector -->
+                        <div class="nav-item">
+                            <select id="languageSelect" class="form-select">
+                                <option value="en" data-i18n="english">English</option>
+                                <option value="ne" data-i18n="nepali">Nepali</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Judge Scoring Link (judges only) -->
+                        <div class="nav-item" id="judgeScoring" style="display: none;">
+                            <a href="/judge/scoring" class="nav-link">My Scoring</a>
+                        </div>
+                        
+                        <!-- Winners Link -->
+                        <div class="nav-item">
+                            <a href="/winners" class="nav-link" data-i18n="winners">Winners</a>
+                        </div>
+                        
+                        <!-- Admin Panel Link (admin only) -->
+                        <div class="nav-item" data-admin-only style="display: none;">
+                            <a href="/admin/dashboard" class="nav-link" data-i18n="adminPanel">Admin Panel</a>
+                        </div>
+                        
+                        <!-- Logout Button -->
+                        <div class="nav-item">
+                            <button id="logoutBtn" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="content-wrapper">
+            <div class="container">
+                <div id="contentArea">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/main.js"></script>
+    <script>
+        // Language selector handler
+        document.addEventListener('DOMContentLoaded', () => {
+            const langSelect = document.getElementById('languageSelect');
+            langSelect.value = i18n.getLanguage();
+            
+            langSelect.addEventListener('change', (e) => {
+                i18n.setLanguage(e.target.value);
+                // Reload page content
+                window.location.reload();
+            });
+            
+            // Check if user has judge permissions
+            checkJudgePermissions();
+        });
+        
+        async function checkJudgePermissions() {
+            try {
+                const token = auth.getToken();
+                if (!token) {
+                    console.log('No token found, user not logged in');
+                    return;
+                }
+                
+                const response = await fetch('/judge/api/my-assignments', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                console.log('Judge assignments response status:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Judge assignments data:', data);
+                    if (data.assignments && data.assignments.length > 0) {
+                        // User has judge permissions, show the link
+                        console.log('User has judge permissions, showing link');
+                        document.getElementById('judgeScoring').style.display = 'block';
+                    } else {
+                        console.log('User has no active judge assignments');
+                    }
+                } else {
+                    console.log('Failed to fetch judge assignments:', response.statusText);
+                }
+            } catch (error) {
+                console.log('Error checking judge permissions:', error);
+            }
+        }
+    </script>
+</body>
+</html>

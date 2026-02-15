@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Judge Permissions - DSS Talk Admin</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="page-wrapper">
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <a href="/admin/dashboard" class="logo">DSS Talk Admin</a>
+                    <nav class="nav-menu">
+                        <div class="nav-item">
+                            <a href="/admin/dashboard" class="nav-link" data-i18n="back">Back</a>
+                        </div>
+                        <div class="nav-item">
+                            <a href="/admin/logs" class="nav-link">Admin Logs</a>
+                        </div>
+                        <div class="nav-item">
+                            <button id="logoutBtn" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </header>
+        
+        <main class="content-wrapper">
+            <div class="container">
+                <div class="flex-between mb-3">
+                    <h1>Judge Permissions</h1>
+                    <button onclick="showModal('grantPermissionModal')" class="btn btn-success">Grant Permission</button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Active Judge Permissions</h3>
+                    </div>
+                    <div id="permissionsTableArea">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Grant Permission Modal -->
+    <div id="grantPermissionModal" class="modal-overlay">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Grant Judge Permission</h3>
+                <button class="modal-close" onclick="hideModal('grantPermissionModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="grantPermissionForm">
+                    <div class="form-group">
+                        <label class="form-label">Judge Email</label>
+                        <input type="email" id="judgeEmail" class="form-input" required>
+                        <span class="form-help">User must have an account</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Week</label>
+                        <select id="permissionWeek" class="form-select" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Judge Type</label>
+                        <select id="judgeType" class="form-select" required>
+                            <option value="overall">Overall Judge</option>
+                            <option value="content">Content Judge</option>
+                            <option value="style_delivery">Style & Delivery Judge</option>
+                            <option value="language">Language Judge</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideModal('grantPermissionModal')">Cancel</button>
+                <button id="grantPermissionBtn" class="btn btn-primary">Grant Permission</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+    </div>
+    
+    <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/admin.js"></script>
+    <script>
+        let allPermissions = [];
+        
+        async function loadPermissions() {
+            showLoading();
+            try {
+                const response = await fetch('/admin/api/judge-permissions', {
+                    headers: auth.getAuthHeaders()
+                });
+                
+                if (!response.ok) throw new Error('Failed to load permissions');
+                
+                const data = await response.json();
+                allPermissions = data.permissions;
+                displayPermissions(allPermissions);
+            } catch (error) {
+                showAlert('Failed to load permissions: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        function displayPermissions(permissions) {
+            const area = document.getElementById('permissionsTableArea');
+            
+            if (!permissions || permissions.length === 0) {
+                area.innerHTML = '<p class="text-center">No judge permissions granted</p>';
+                return;
+            }
+            
+            area.innerHTML = `
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Judge Email</th>
+                                <th>Week</th>
+                                <th>Judge Type</th>
+                                <th>Status</th>
+                                <th>Granted By</th>
+                                <th>Granted At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${permissions.map(p => `
+                                <tr>
+                                    <td>${p.user_email}</td>
+                                    <td>Week ${p.week?.week_number || 'N/A'} ${p.week?.topic ? '- ' + p.week.topic : ''}</td>
+                                    <td><span class="badge badge-primary">${formatJudgeType(p.judge_type)}</span></td>
+                                    <td>
+                                        ${p.is_active ? 
+                                            '<span class="badge badge-success">Active</span>' : 
+                                            '<span class="badge badge-secondary">Revoked</span>'}
+                                    </td>
+                                    <td>${p.granted_by_admin_email}</td>
+                                    <td>${new Date(p.granted_at).toLocaleDateString()}</td>
+                                    <td>
+                                        ${p.is_active ? 
+                                            `<button onclick="revokePermission('${p.id}')" class="btn btn-sm btn-danger">Revoke</button>` :
+                                            `<button onclick="reactivatePermission('${p.id}')" class="btn btn-sm btn-success">Re-activate</button>`}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        function formatJudgeType(type) {
+            const types = {
+                'overall': 'Overall',
+                'content': 'Content',
+                'style_delivery': 'Style & Delivery',
+                'language': 'Language'
+            };
+            return types[type] || type;
+        }
+        
+        async function revokePermission(permissionId) {
+            if (!confirm('Revoke this judging permission?')) return;
+            
+            showLoading();
+            try {
+                const response = await fetch(`/admin/api/judge-permissions/${permissionId}/revoke`, {
+                    method: 'POST',
+                    headers: auth.getAuthHeaders()
+                });
+                
+                if (!response.ok) throw new Error('Failed to revoke permission');
+                
+                showAlert('Permission revoked successfully', 'success');
+                await loadPermissions();
+            } catch (error) {
+                showAlert('Failed to revoke permission: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        async function reactivatePermission(permissionId) {
+            if (!confirm('Re-activate this judging permission?')) return;
+            
+            showLoading();
+            try {
+                const response = await fetch(`/admin/api/judge-permissions/${permissionId}/reactivate`, {
+                    method: 'POST',
+                    headers: auth.getAuthHeaders()
+                });
+                
+                if (!response.ok) throw new Error('Failed to reactivate permission');
+                
+                showAlert('Permission re-activated successfully', 'success');
+                await loadPermissions();
+            } catch (error) {
+                showAlert('Failed to reactivate permission: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        document.getElementById('grantPermissionBtn').addEventListener('click', async () => {
+            const email = document.getElementById('judgeEmail').value;
+            const weekId = document.getElementById('permissionWeek').value;
+            const judgeType = document.getElementById('judgeType').value;
+            
+            if (!email || !weekId || !judgeType) {
+                showAlert('Please fill all fields', 'error');
+                return;
+            }
+            
+            showLoading();
+            try {
+                const response = await fetch('/admin/api/judge-permissions', {
+                    method: 'POST',
+                    headers: auth.getAuthHeaders(),
+                    body: JSON.stringify({
+                        user_email: email,
+                        week_id: weekId,
+                        judge_type: judgeType
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to grant permission');
+                }
+                
+                showAlert('Permission granted successfully', 'success');
+                hideModal('grantPermissionModal');
+                document.getElementById('grantPermissionForm').reset();
+                await loadPermissions();
+            } catch (error) {
+                showAlert('Failed to grant permission: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await adminPanel.initialize();
+            
+            // Load weeks for permission dropdown
+            const weeks = await adminPanel.loadWeeks();
+            const weekSelect = document.getElementById('permissionWeek');
+            weeks.forEach(w => {
+                const option = document.createElement('option');
+                option.value = w.id;
+                option.textContent = `Week ${w.week_number} - ${w.topic || 'No Topic'} (${w.sessions.events.name})`;
+                weekSelect.appendChild(option);
+            });
+            
+            await loadPermissions();
+            
+            document.getElementById('logoutBtn').addEventListener('click', async () => {
+                await auth.logout();
+                window.location.href = '/';
+            });
+            
+            i18n.updatePageTexts();
+        });
+    </script>
+</body>
+</html>

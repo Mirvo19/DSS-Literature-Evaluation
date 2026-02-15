@@ -1,0 +1,51 @@
+# Environment variables
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database migration files (use MASTER_SCHEMA.sql instead)
+database/schema.sql
+database/migration_*.sql
+database/fix_*.sql
+database/add_*.sql
+database/update_*.sql
+database/debug_*.py
+
+# Documentation (keep only README.md and MASTER.md)
+*.md
+!README.md
+!MASTER.md

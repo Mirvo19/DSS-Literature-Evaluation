@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - DSS Talk</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1 class="auth-title" data-i18n="signup">Sign Up</h1>
+            
+            <div id="errorMessage" class="alert alert-error hidden"></div>
+            <div id="successMessage" class="alert alert-success hidden"></div>
+            
+            <form id="signupForm">
+                <!-- Email -->
+                <div class="form-group">
+                    <label for="email" class="form-label" data-i18n="email">Email</label>
+                    <input type="email" id="email" class="form-input" data-i18n-placeholder="email" required>
+                </div>
+                
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="password" class="form-label" data-i18n="password">Password</label>
+                    <input type="password" id="password" class="form-input" data-i18n-placeholder="password" required minlength="6">
+                    <span class="form-help" data-i18n="passwordTooShort">Password must be at least 6 characters</span>
+                </div>
+                
+                <!-- Confirm Password -->
+                <div class="form-group">
+                    <label for="confirmPassword" class="form-label" data-i18n="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" class="form-input" data-i18n-placeholder="confirmPassword" required minlength="6">
+                    <span id="passwordError" class="form-error hidden" data-i18n="passwordMismatch">Passwords do not match</span>
+                </div>
+                
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary" style="width: 100%;" data-i18n="signupButton">
+                    Sign Up
+                </button>
+            </form>
+            
+            <div class="auth-footer">
+                <p>
+                    <span data-i18n="alreadyHaveAccount">Already have an account?</span>
+                    <a href="/" data-i18n="login">Login</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+    </div>
+    
+    <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script>
+        // Initialize language
+        document.addEventListener('DOMContentLoaded', () => {
+            // Update all texts with current language
+            i18n.updatePageTexts();
+            
+            // Form validation
+            const password = document.getElementById('password');
+            const confirmPassword = document.getElementById('confirmPassword');
+            const passwordError = document.getElementById('passwordError');
+            
+            function validatePasswords() {
+                if (password.value && confirmPassword.value) {
+                    if (password.value !== confirmPassword.value) {
+                        passwordError.classList.remove('hidden');
+                        return false;
+                    } else {
+                        passwordError.classList.add('hidden');
+                        return true;
+                    }
+                }
+                return true;
+            }
+            
+            password.addEventListener('input', validatePasswords);
+            confirmPassword.addEventListener('input', validatePasswords);
+            
+            // Form submission
+            const form = document.getElementById('signupForm');
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // Hide messages
+                errorMessage.classList.add('hidden');
+                successMessage.classList.add('hidden');
+                
+                // Validate passwords match
+                if (!validatePasswords()) {
+                    errorMessage.textContent = i18n.t('passwordMismatch');
+                    errorMessage.classList.remove('hidden');
+                    return;
+                }
+                
+                // Get form data
+                const email = document.getElementById('email').value;
+                const pwd = password.value;
+                
+                // Show loading
+                loadingOverlay.classList.remove('hidden');
+                
+                try {
+                    const result = await auth.signup(email, pwd);
+                    
+                    // Show success message
+                    successMessage.textContent = 'Account created successfully! Redirecting to login...';
+                    successMessage.classList.remove('hidden');
+                    
+                    // Redirect to login after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                    
+                } catch (error) {
+                    // Show error
+                    errorMessage.textContent = error.message;
+                    errorMessage.classList.remove('hidden');
+                    loadingOverlay.classList.add('hidden');
+                }
+            });
+            
+            // If already logged in, redirect to dashboard
+            if (auth.isAuthenticated()) {
+                window.location.href = '/dashboard';
+            }
+        });
+    </script>
+</body>
+</html>

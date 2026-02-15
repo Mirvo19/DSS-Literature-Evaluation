@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week Details - DSS Talk</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="page-wrapper">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <a href="/dashboard" class="logo">DSS Talk</a>
+                    
+                    <nav class="nav-menu">
+                        <div class="nav-item">
+                            <select id="languageSelect" class="form-select">
+                                <option value="en" data-i18n="english">English</option>
+                                <option value="ne" data-i18n="nepali">Nepali</option>
+                            </select>
+                        </div>
+                        
+                        <div class="nav-item">
+                            <a href="/dashboard" class="nav-link" data-i18n="back">Back</a>
+                        </div>
+                        
+                        <div class="nav-item" data-admin-only style="display: none;">
+                            <a href="/admin/dashboard" class="nav-link" data-i18n="adminPanel">Admin Panel</a>
+                        </div>
+                        
+                        <div class="nav-item">
+                            <button id="logoutBtn" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="content-wrapper">
+            <div class="container">
+                <div id="weekInfo" class="card">
+                    <div class="spinner"></div>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-3">
+                    <!-- Judges Column -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title" data-i18n="judges">Judges</h3>
+                        </div>
+                        <div id="judgesArea"></div>
+                    </div>
+                    
+                    <!-- Participants Column -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title" data-i18n="participants">Participants</h3>
+                        </div>
+                        <div id="participantsArea"></div>
+                    </div>
+                    
+                    <!-- Criteria Column -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title" data-i18n="criteria">Judging Criteria</h3>
+                        </div>
+                        <div id="criteriaArea"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script>
+        async function loadWeekDetail() {
+            // Verify authentication
+            const authenticated = await requireAuth();
+            if (!authenticated) return;
+            
+            updateUIForAuth();
+            
+            // Get week ID from URL
+            const pathParts = window.location.pathname.split('/');
+            const weekId = pathParts[pathParts.length - 1];
+            
+            try {
+                const response = await fetch(`/api/week-detail/${weekId}`, {
+                    headers: auth.getAuthHeaders()
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load week details');
+                }
+                
+                const data = await response.json();
+                
+                // Display week info
+                displayWeekInfo(data.week);
+                displayParticipants(data.participants);
+                displayJudges(data.judges);
+                displayCriteria(data.criteria);
+                
+            } catch (error) {
+                console.error('Error loading week:', error);
+                document.getElementById('weekInfo').innerHTML = `
+                    <div class="alert alert-error">${i18n.t('error')}: ${error.message}</div>
+                `;
+            }
+        }
+        
+        function displayWeekInfo(week) {
+            const weekInfo = document.getElementById('weekInfo');
+            const eventName = i18n.getLanguage() === 'ne' && week.sessions.events.name_nepali 
+                ? week.sessions.events.name_nepali 
+                : week.sessions.events.name;
+            
+            const topic = i18n.getLanguage() === 'ne' && week.topic_nepali 
+                ? week.topic_nepali 
+                : week.topic;
+            
+            weekInfo.innerHTML = `
+                <h2>${eventName} - ${i18n.t('session')} ${week.sessions.session_number} - ${i18n.t('week')} ${week.week_number}</h2>
+                ${topic ? `<p><strong>${i18n.t('topic')}:</strong> ${topic}</p>` : ''}
+                ${week.date ? `<p><strong>${i18n.t('date')}:</strong> ${new Date(week.date).toLocaleDateString()}</p>` : ''}
+                ${week.is_partial ? `<span class="badge badge-warning">${i18n.t('partialWeek')}</span>` : ''}
+            `;
+        }
+        
+        function displayParticipants(participants) {
+            const area = document.getElementById('participantsArea');
+            
+            if (!participants || participants.length === 0) {
+                area.innerHTML = `<p data-i18n="noData">${i18n.t('noData')}</p>`;
+                return;
+            }
+            
+            area.innerHTML = `
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th data-i18n="studentName">${i18n.t('studentName')}</th>
+                                <th data-i18n="score">${i18n.t('score')}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${participants.map(p => `
+                                <tr class="${p.is_winner ? 'winner-row' : ''}">
+                                    <td>
+                                        ${p.is_winner ? '<span class="crown-icon">👑</span>' : ''}
+                                        ${p.students.full_name}
+                                    </td>
+                                    <td>${p.score || 0}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        function displayJudges(judges) {
+            const area = document.getElementById('judgesArea');
+            
+            if (!judges || judges.length === 0) {
+                area.innerHTML = `<p data-i18n="noData">${i18n.t('noData')}</p>`;
+                return;
+            }
+            
+            area.innerHTML = `
+                <ul style="list-style: none; padding: 0;">
+                    ${judges.map(j => `
+                        <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                            <strong>${j.judges.full_name}</strong>
+                            ${j.judges.title ? `<br><small>${j.judges.title}</small>` : ''}
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+        }
+        
+        function displayCriteria(criteria) {
+            const area = document.getElementById('criteriaArea');
+            
+            if (!criteria || criteria.length === 0) {
+                area.innerHTML = `<p data-i18n="noData">${i18n.t('noData')}</p>`;
+                return;
+            }
+            
+            area.innerHTML = `
+                <ul style="list-style: none; padding: 0;">
+                    ${criteria.map(c => {
+                        const name = i18n.getLanguage() === 'ne' && c.judging_criteria.name_nepali 
+                            ? c.judging_criteria.name_nepali 
+                            : c.judging_criteria.name;
+                        
+                        return `
+                            <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                                <strong>${name}</strong>
+                                <span class="badge badge-primary">${c.judging_criteria.max_points} pts</span>
+                            </li>
+                        `;
+                    }).join('')}
+                </ul>
+            `;
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            const langSelect = document.getElementById('languageSelect');
+            langSelect.value = i18n.getLanguage();
+            
+            langSelect.addEventListener('change', (e) => {
+                i18n.setLanguage(e.target.value);
+                window.location.reload();
+            });
+            
+            const logoutBtn = document.getElementById('logoutBtn');
+            logoutBtn.addEventListener('click', async () => {
+                await auth.logout();
+                window.location.href = '/';
+            });
+            
+            await loadWeekDetail();
+            i18n.updatePageTexts();
+        });
+    </script>
+</body>
+</html>

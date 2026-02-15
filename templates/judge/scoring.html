@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Judge Scoring - DSS Talk</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="page-wrapper">
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <a href="/dashboard" class="logo">DSS Talk</a>
+                    <nav class="nav-menu">
+                        <!-- Navigation Links -->
+                        <div class="nav-item">
+                            <a href="/dashboard" class="nav-link">Dashboard</a>
+                        </div>
+                        <div class="nav-item">
+                            <a href="/judge/scoring" class="nav-link" style="font-weight: bold;">My Scoring</a>
+                        </div>
+                        <div class="nav-item">
+                            <a href="/winners" class="nav-link">Winners</a>
+                        </div>
+                        
+                        <!-- User Info -->
+                        <div class="nav-item">
+                            <span id="judgeEmailDisplay" style="margin-right: 1rem;"></span>
+                        </div>
+                        <div class="nav-item">
+                            <button id="logoutBtn" class="btn btn-secondary btn-sm">Logout</button>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </header>
+        
+        <main class="content-wrapper">
+            <div class="container">
+                <h1>Judge Scoring Panel</h1>
+                
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h3 class="card-title">My Assignments</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="assignmentsArea">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="scoringArea" class="hidden">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h3 class="card-title">Week Information</h3>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Week:</strong> <span id="weekInfo"></span></p>
+                            <p><strong>Topic:</strong> <span id="topicInfo"></span></p>
+                            <p><strong>Your Role:</strong> <span id="roleInfo" class="badge badge-primary"></span></p>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Participants to Score</h3>
+                        </div>
+                        <div id="participantsArea"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Score Modal -->
+    <div id="scoreModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Score Participant</h3>
+                <button class="modal-close" onclick="hideModal('scoreModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Student:</strong> <span id="modalStudentName"></span></p>
+                <input type="hidden" id="modalParticipantId">
+                <input type="hidden" id="modalJudgeType">
+                
+                <div id="criteriaScoresArea"></div>
+                
+                <div class="form-group">
+                    <label class="form-label">Comments</label>
+                    <textarea id="scoreComments" class="form-input" rows="4"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideModal('scoreModal')">Cancel</button>
+                <button id="saveScoreBtn" class="btn btn-primary">Save Score</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+    </div>
+    
+    <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/admin.js"></script>
+    <script>
+        let currentAssignments = [];
+        let currentWeek = null;
+        let criteriaByType = {};
+        
+        async function loadJudgeAssignments() {
+            showLoading();
+            try {
+                const response = await fetch('/judge/api/my-assignments', {
+                    headers: auth.getAuthHeaders()
+                });
+                
+                if (!response.ok) throw new Error('Failed to load assignments');
+                
+                const data = await response.json();
+                currentAssignments = data.assignments;
+                
+                const user = auth.getUser();
+                document.getElementById('judgeEmailDisplay').textContent = user?.email || 'Judge';
+                
+                displayAssignments(currentAssignments);
+            } catch (error) {
+                showAlert('Failed to load assignments: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        function displayAssignments(assignments) {
+            const area = document.getElementById('assignmentsArea');
+            
+            if (!assignments || assignments.length === 0) {
+                area.innerHTML = '<p>No active judging assignments</p>';
+                return;
+            }
+            
+            area.innerHTML = `
+                <div class="grid grid-cols-2 gap-2">
+                    ${assignments.map(a => `
+                        <div class="card" style="cursor: pointer;" onclick="selectAssignment('${a.id}')">
+                            <div class="card-body">
+                                <h4>Week ${a.weeks?.week_number || 'N/A'}</h4>
+                                <p><strong>Topic:</strong> ${a.weeks?.topic || 'No Topic'}</p>
+                                <p><strong>Role:</strong> <span class="badge badge-primary">${formatJudgeType(a.judge_type || 'overall')}</span></p>
+                                <p><strong>Event:</strong> ${a.weeks?.sessions?.events?.name || 'N/A'}</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        
+        async function selectAssignment(assignmentId) {
+            const assignment = currentAssignments.find(a => a.id === assignmentId);
+            if (!assignment) return;
+            
+            showLoading();
+            try {
+                // Load week participants
+                const response = await fetch(`/admin/api/weeks/${assignment.week_id}`, {
+                    headers: auth.getAuthHeaders()
+                });
+                
+                if (!response.ok) throw new Error('Failed to load week details');
+                
+                const data = await response.json();
+                currentWeek = data.week;
+                
+                // Load criteria for this judge type
+                await loadCriteria(assignment.judge_type);
+                
+                document.getElementById('weekInfo').textContent = `Week ${currentWeek.week_number}`;
+                document.getElementById('topicInfo').textContent = currentWeek.topic || 'No Topic';
+                document.getElementById('roleInfo').textContent = formatJudgeType(assignment.judge_type);
+                
+                await displayParticipantsForJudging(currentWeek.participants, assignment.judge_type);
+                
+                document.getElementById('scoringArea').classList.remove('hidden');
+                window.scrollTo(0, document.getElementById('scoringArea').offsetTop);
+            } catch (error) {
+                showAlert('Failed to load assignment: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        async function loadCriteria(judgeType) {
+            try {
+                const response = await fetch('/admin/api/judging-criteria', {
+                    headers: auth.getAuthHeaders()
+                });
+                
+                const data = await response.json();
+                criteriaByType[judgeType] = data.criteria.filter(c => c.category === judgeType);
+            } catch (error) {
+                console.error('Failed to load criteria:', error);
+            }
+        }
+        
+        async function displayParticipantsForJudging(participants, judgeType) {
+            const area = document.getElementById('participantsArea');
+            
+            // Load existing scores
+            const scoresResponse = await fetch(`/judge/api/my-scores?week_id=${currentWeek.id}`, {
+                headers: auth.getAuthHeaders()
+            });
+            const scoresData = await scoresResponse.json();
+            const scores = scoresData.scores || [];
+            
+            area.innerHTML = `
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Grade</th>
+                                <th>Your Score</th>
+                                <th>Comments</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${participants.map(p => {
+                                const existingScore = scores.find(s => s.participant_id === p.id && s.judge_type === judgeType);
+                                const scoreJson = existingScore ? JSON.stringify(existingScore).replace(/"/g, '&quot;') : 'null';
+                                const comments = existingScore?.comments || '';
+                                const shortComment = comments.length > 50 ? comments.substring(0, 50) + '...' : comments;
+                                const needsExpand = comments.length > 50;
+                                
+                                return `
+                                    <tr>
+                                        <td>${p.students?.full_name || 'Unknown'}</td>
+                                        <td>${p.students?.grade || '-'}</td>
+                                        <td>${existingScore ? existingScore.score : '-'}</td>
+                                        <td>
+                                            ${comments ? `
+                                                <span id="comment-short-${p.id}">${shortComment}</span>
+                                                ${needsExpand ? `
+                                                    <span id="comment-full-${p.id}" style="display:none;">${comments}</span>
+                                                    <button onclick="toggleComment('${p.id}')" class="btn btn-sm btn-secondary" id="comment-btn-${p.id}" style="margin-left: 0.5rem;">Expand</button>
+                                                ` : ''}
+                                            ` : '-'}
+                                        </td>
+                                        <td>
+                                            ${existingScore ? 
+                                                '<span class="badge badge-success">Scored</span>' : 
+                                                '<span class="badge badge-warning">Pending</span>'}
+                                        </td>
+                                        <td>
+                                            <button onclick="openScoreModal('${p.id}', '${p.students?.full_name || 'Unknown'}', '${judgeType}', ${scoreJson})" class="btn btn-sm btn-primary">
+                                                ${existingScore ? 'Edit Score' : 'Score'}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        function toggleComment(participantId) {
+            const shortEl = document.getElementById(`comment-short-${participantId}`);
+            const fullEl = document.getElementById(`comment-full-${participantId}`);
+            const btnEl = document.getElementById(`comment-btn-${participantId}`);
+            
+            if (fullEl.style.display === 'none') {
+                shortEl.style.display = 'none';
+                fullEl.style.display = 'inline';
+                btnEl.textContent = 'Collapse';
+            } else {
+                shortEl.style.display = 'inline';
+                fullEl.style.display = 'none';
+                btnEl.textContent = 'Expand';
+            }
+        }
+        
+        function openScoreModal(participantId, studentName, judgeType, existingScore) {
+            document.getElementById('modalParticipantId').value = participantId;
+            document.getElementById('modalStudentName').textContent = studentName;
+            document.getElementById('modalJudgeType').value = judgeType;
+            
+            // Parse existing score safely
+            let score = null;
+            if (existingScore && existingScore !== 'null' && typeof existingScore === 'string') {
+                try {
+                    score = JSON.parse(existingScore.replace(/&quot;/g, '"'));
+                } catch (e) {
+                    console.error('Error parsing existing score:', e);
+                }
+            }
+            
+            document.getElementById('scoreComments').value = score?.comments || '';
+            
+            // Display criteria breakdown
+            const criteria = criteriaByType[judgeType] || [];
+            const criteriaArea = document.getElementById('criteriaScoresArea');
+            
+            if (criteria.length > 0) {
+                const breakdown = score?.criteria_breakdown ? JSON.parse(score.criteria_breakdown) : {};
+                criteriaArea.innerHTML = `
+                    <h5>Scoring Criteria</h5>
+                    ${criteria.map(c => `
+                        <div class="form-group">
+                            <label class="form-label">${c.name} (Max: ${c.max_points})</label>
+                            <input type="number" 
+                                   class="form-input criteria-score" 
+                                   data-criteria-id="${c.id}"
+                                   data-max="${c.max_points}"
+                                   min="0" 
+                                   max="${c.max_points}" 
+                                   step="0.5"
+                                   value="${breakdown[c.id] || ''}"
+                                   oninput="validateCriteriaScore(this)">
+                        </div>
+                    `).join('')}
+                    <hr>
+                `;
+            } else {
+                criteriaArea.innerHTML = '';
+            }
+            
+            showModal('scoreModal');
+        }
+        
+        function validateCriteriaScore(input) {
+            const max = parseFloat(input.dataset.max);
+            const value = parseFloat(input.value);
+            
+            if (!isNaN(value) && value > max) {
+                input.value = max;
+                showAlert(`Score cannot exceed ${max}`, 'error');
+            }
+        }
+        
+        document.getElementById('saveScoreBtn').addEventListener('click', async () => {
+            const participantId = document.getElementById('modalParticipantId').value;
+            const judgeType = document.getElementById('modalJudgeType').value;
+            const comments = document.getElementById('scoreComments').value;
+            
+            // Collect criteria breakdown and calculate total
+            const criteriaBreakdown = {};
+            let totalScore = 0;
+            let hasValidScores = false;
+            
+            document.querySelectorAll('.criteria-score').forEach(input => {
+                const criteriaId = input.dataset.criteriaId;
+                const max = parseFloat(input.dataset.max);
+                const value = parseFloat(input.value);
+                
+                if (!isNaN(value)) {
+                    // Enforce max limit
+                    if (value > max) {
+                        showAlert(`Score for ${input.previousElementSibling.textContent} cannot exceed ${max}`, 'error');
+                        throw new Error('Score exceeds maximum');
+                    }
+                    criteriaBreakdown[criteriaId] = value;
+                    totalScore += value;
+                    hasValidScores = true;
+                }
+            });
+            
+            if (!hasValidScores || totalScore === 0) {
+                showAlert('Please enter at least one score', 'error');
+                return;
+            }
+            
+            showLoading();
+            try {
+                const response = await fetch('/judge/api/submit-score', {
+                    method: 'POST',
+                    headers: auth.getAuthHeaders(),
+                    body: JSON.stringify({
+                        participant_id: participantId,
+                        judge_type: judgeType,
+                        score: totalScore,
+                        comments: comments,
+                        criteria_breakdown: criteriaBreakdown
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to save score');
+                
+                showAlert('Score saved successfully', 'success');
+                hideModal('scoreModal');
+                
+                // Reload participants to show updated scores
+                const assignment = currentAssignments.find(a => a.week_id === currentWeek.id);
+                if (assignment) {
+                    await displayParticipantsForJudging(currentWeek.participants, assignment.judge_type);
+                }
+            } catch (error) {
+                showAlert('Failed to save score: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+        
+        function formatJudgeType(type) {
+            const types = {
+                'overall': 'Overall Judge',
+                'content': 'Content Judge',
+                'style_delivery': 'Style & Delivery Judge',
+                'language': 'Language Judge'
+            };
+            return types[type] || type;
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!auth.isAuthenticated()) {
+                window.location.href = '/';
+                return;
+            }
+            
+            await loadJudgeAssignments();
+            
+            document.getElementById('logoutBtn').addEventListener('click', async () => {
+                await auth.logout();
+                window.location.href = '/';
+            });
+        });
+    </script>
+</body>
+</html>

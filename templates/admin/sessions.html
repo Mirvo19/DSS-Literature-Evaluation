@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Sessions - DSS Talk Admin</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="page-wrapper">
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <a href="/admin/dashboard" class="logo">DSS Talk Admin</a>
+                    <nav class="nav-menu">
+                        <div class="nav-item">
+                            <a href="/admin/dashboard" class="nav-link" data-i18n="back">Back</a>
+                        </div>
+                        <div class="nav-item">
+                            <a href="/admin/logs" class="nav-link">Admin Logs</a>
+                        </div>
+                        <div class="nav-item">
+                            <button id="logoutBtn" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </header>
+        
+        <main class="content-wrapper">
+            <div class="container">
+                <div class="flex-between mb-3">
+                    <h1 data-i18n="manageSessions">Manage Sessions</h1>
+                    <button onclick="showModal('addSessionModal')" class="btn btn-success" data-i18n="createSession">Create Session</button>
+                </div>
+                
+                <div class="card">
+                    <div id="sessionsTableArea">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Add Session Modal -->
+    <div id="addSessionModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" data-i18n="createSession">Create Session</h3>
+                <button class="modal-close" onclick="hideModal('addSessionModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addSessionForm">
+                    <div class="form-group">
+                        <label class="form-label">Event</label>
+                        <input type="text" id="sessionEventDisplay" class="form-input" readonly>
+                        <input type="hidden" id="sessionEvent">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="sessionName">Session Name</label>
+                        <input type="text" id="sessionName" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="sessionNumber">Session Number</label>
+                        <input type="number" id="sessionNumber" class="form-input" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="startDate">Start Date</label>
+                        <input type="date" id="sessionStartDate" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="endDate">End Date</label>
+                        <input type="date" id="sessionEndDate" class="form-input">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideModal('addSessionModal')" data-i18n="cancel">Cancel</button>
+                <button id="saveSessionBtn" class="btn btn-primary" data-i18n="save">Save</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+    </div>
+    
+    <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/admin.js"></script>
+    <script>
+        let allSessions = [];
+        
+        async function loadSessions() {
+            showLoading();
+            try {
+                allSessions = await adminPanel.loadSessions();
+                displaySessions(allSessions);
+            } catch (error) {
+                showAlert('Failed to load sessions: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        function displaySessions(sessions) {
+            const area = document.getElementById('sessionsTableArea');
+            
+            if (!sessions || sessions.length === 0) {
+                area.innerHTML = '<p class="text-center">No sessions found</p>';
+                return;
+            }
+            
+            area.innerHTML = `
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>${i18n.t('sessionName')}</th>
+                                <th>${i18n.t('eventName')}</th>
+                                <th>${i18n.t('sessionNumber')}</th>
+                                <th>Status</th>
+                                <th>${i18n.t('actions')}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${sessions.map(s => `
+                                <tr>
+                                    <td>${s.name}</td>
+                                    <td>${s.events.name}</td>
+                                    <td>${s.session_number}</td>
+                                    <td>
+                                        <span class="badge badge-${s.is_active ? 'success' : 'secondary'}">
+                                            ${s.is_active ? i18n.t('active') : i18n.t('inactive')}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button onclick="resetSpeakers('${s.id}')" class="btn btn-sm btn-warning">${i18n.t('resetSpeakers')}</button>
+                                        <button onclick="deleteSession('${s.id}')" class="btn btn-sm btn-danger">${i18n.t('delete')}</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        async function resetSpeakers(sessionId) {
+            if (!confirm('Reset all speaker status for this session?')) return;
+            
+            showLoading();
+            try {
+                await adminPanel.resetSessionSpeakers(sessionId);
+                showAlert('Speakers reset successfully', 'success');
+            } catch (error) {
+                showAlert('Failed to reset speakers: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        async function deleteSession(sessionId) {
+            if (!confirm(i18n.t('confirmDelete'))) return;
+            
+            showLoading();
+            try {
+                await adminPanel.deleteSession(sessionId);
+                showAlert('Session deleted successfully', 'success');
+                await loadSessions();
+            } catch (error) {
+                showAlert('Failed to delete session: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Add Session
+        document.getElementById('saveSessionBtn').addEventListener('click', async () => {
+            const eventId = document.getElementById('sessionEvent').value;
+            const name = document.getElementById('sessionName').value;
+            const number = document.getElementById('sessionNumber').value;
+            const startDate = document.getElementById('sessionStartDate').value;
+            const endDate = document.getElementById('sessionEndDate').value;
+            
+            if (!eventId || !name || !number) {
+                showAlert('Please fill required fields', 'error');
+                return;
+            }
+            
+            showLoading();
+            try {
+                await adminPanel.createSession({
+                    event_id: eventId,
+                    name: name,
+                    session_number: parseInt(number),
+                    start_date: startDate || null,
+                    end_date: endDate || null
+                });
+                
+                showAlert('Session created successfully', 'success');
+                hideModal('addSessionModal');
+                document.getElementById('addSessionForm').reset();
+                await loadSessions();
+            } catch (error) {
+                showAlert('Failed to create session: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await adminPanel.initialize();
+            
+            // Get selected event from login
+            const selectedEvent = localStorage.getItem('selected_event') || 'debate';
+            const event = adminPanel.events.find(e => e.name.toLowerCase() === selectedEvent.toLowerCase());
+            
+            if (event) {
+                document.getElementById('sessionEvent').value = event.id;
+                document.getElementById('sessionEventDisplay').value = event.name;
+            } else if (adminPanel.events.length > 0) {
+                // Fallback to first event
+                document.getElementById('sessionEvent').value = adminPanel.events[0].id;
+                document.getElementById('sessionEventDisplay').value = adminPanel.events[0].name;
+            }
+            
+            await loadSessions();
+            
+            document.getElementById('logoutBtn').addEventListener('click', async () => {
+                await auth.logout();
+                window.location.href = '/';
+            });
+            
+            i18n.updatePageTexts();
+        });
+    </script>
+</body>
+</html>

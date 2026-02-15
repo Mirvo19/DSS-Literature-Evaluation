@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week Rankings - DSS Talk</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="page-wrapper">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <a href="/dashboard" class="logo">DSS Talk</a>
+                    
+                    <nav class="nav-menu">
+                        <div class="nav-item">
+                            <select id="languageSelect" class="form-select">
+                                <option value="en" data-i18n="english">English</option>
+                                <option value="ne" data-i18n="nepali">Nepali</option>
+                            </select>
+                        </div>
+                        
+                        <div class="nav-item">
+                            <a href="/dashboard" class="nav-link" data-i18n="dashboard">Dashboard</a>
+                        </div>
+                        
+                        <div class="nav-item">
+                            <a href="/winners" class="nav-link">Winners</a>
+                        </div>
+                        
+                        <div class="nav-item">
+                            <button id="logoutBtn" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="content-wrapper">
+            <div class="container">
+                <div class="mb-3">
+                    <a href="/winners" class="btn btn-secondary">← Back to Winners</a>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title" id="weekTitle">Week Rankings</h2>
+                        <p id="weekInfo" style="margin: 0.5rem 0 0 0; color: #666;"></p>
+                    </div>
+                    <div class="card-body">
+                        <!-- Top 3 Winners -->
+                        <div id="top3Area" class="mb-4"></div>
+                        
+                        <!-- All Rankings -->
+                        <h3>Complete Rankings</h3>
+                        <div id="rankingsArea">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script>
+        const weekId = window.location.pathname.split('/').pop();
+        
+        async function loadRankings() {
+            try {
+                const response = await fetch(`/api/week-rankings/${weekId}`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load rankings');
+                }
+                
+                const data = await response.json();
+                displayWeekInfo(data.week);
+                displayRankings(data.results);
+                
+            } catch (error) {
+                console.error('Error loading rankings:', error);
+                document.getElementById('rankingsArea').innerHTML = `
+                    <div class="alert alert-error">Error: ${error.message}</div>
+                `;
+            }
+        }
+        
+        function displayWeekInfo(week) {
+            const eventName = week.sessions?.events?.name || 'Unknown Event';
+            const weekNumber = week.week_number || '-';
+            const topic = week.topic || '-';
+            const date = week.date ? new Date(week.date).toLocaleDateString() : '-';
+            
+            document.getElementById('weekTitle').textContent = `${eventName} - Week ${weekNumber}`;
+            document.getElementById('weekInfo').textContent = `Topic: ${topic} | Date: ${date}`;
+        }
+        
+        function displayRankings(results) {
+            if (!results || results.length === 0) {
+                document.getElementById('rankingsArea').innerHTML = '<p>No rankings available yet.</p>';
+                document.getElementById('top3Area').style.display = 'none';
+                return;
+            }
+            
+            // Display top 3
+            const top3 = results.filter(r => r.is_winner).slice(0, 3);
+            if (top3.length > 0) {
+                const top3HTML = `
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem;">
+                        ${top3.map((result, index) => {
+                            const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
+                            return `
+                                <div style="padding: 1.5rem; border: 2px solid #ddd; border-radius: 8px; text-align: center; min-width: 220px;">
+                                    <div style="font-size: 3rem;">${medal}</div>
+                                    <div style="font-weight: bold; font-size: 1.2rem; margin: 0.5rem 0;">${result.student_name}</div>
+                                    <div style="color: #666; font-size: 0.9rem;">Roll: ${result.roll_number}</div>
+                                    <div style="font-size: 1.5rem; font-weight: bold; margin-top: 0.5rem; color: #333;">${result.total_score.toFixed(2)}</div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+                document.getElementById('top3Area').innerHTML = top3HTML;
+            }
+            
+            // Display all rankings
+            const rankingsHTML = `
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Student Name</th>
+                                <th>Roll Number</th>
+                                <th>Grade</th>
+                                <th>Overall</th>
+                                <th>Content</th>
+                                <th>Style & Delivery</th>
+                                <th>Language</th>
+                                <th>Total Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${results.map((result, index) => {
+                                const position = result.position || (index + 1);
+                                const isWinner = result.is_winner;
+                                return `
+                                    <tr ${isWinner ? 'style="background-color: #fff3cd;"' : ''}>
+                                        <td><strong>${position}${isWinner ? ' 👑' : ''}</strong></td>
+                                        <td>${result.student_name}</td>
+                                        <td>${result.roll_number}</td>
+                                        <td>${result.grade}</td>
+                                        <td>${result.overall_score !== null ? result.overall_score.toFixed(2) : '-'}</td>
+                                        <td>${result.content_score !== null ? result.content_score.toFixed(2) : '-'}</td>
+                                        <td>${result.style_delivery_score !== null ? result.style_delivery_score.toFixed(2) : '-'}</td>
+                                        <td>${result.language_score !== null ? result.language_score.toFixed(2) : '-'}</td>
+                                        <td><strong>${result.total_score.toFixed(2)}</strong></td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            document.getElementById('rankingsArea').innerHTML = rankingsHTML;
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            loadRankings();
+            
+            document.getElementById('logoutBtn').addEventListener('click', async () => {
+                await auth.logout();
+                window.location.href = '/';
+            });
+            
+            // Language selector
+            document.getElementById('languageSelect').addEventListener('change', (e) => {
+                i18n.setLanguage(e.target.value);
+            });
+        });
+    </script>
+</body>
+</html>

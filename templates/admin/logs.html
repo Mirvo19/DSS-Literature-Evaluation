@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Logs - DSS Talk Admin</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="page-wrapper">
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <a href="/admin/dashboard" class="logo">DSS Talk Admin</a>
+                    <nav class="nav-menu">
+                        <div class="nav-item">
+                            <a href="/admin/dashboard" class="nav-link" data-i18n="back">Back</a>
+                        </div>
+                        <div class="nav-item">
+                            <button id="logoutBtn" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </header>
+        
+        <main class="content-wrapper">
+            <div class="container">
+                <h1>Admin Activity Logs</h1>
+                
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h3 class="card-title">Filters</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="form-group">
+                                <label class="form-label">Action Type</label>
+                                <select id="filterActionType" class="form-select">
+                                    <option value="">All Actions</option>
+                                    <option value="CREATE">Create</option>
+                                    <option value="UPDATE">Update</option>
+                                    <option value="DELETE">Delete</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Entity Type</label>
+                                <select id="filterEntityType" class="form-select">
+                                    <option value="">All Entities</option>
+                                    <option value="week">Week</option>
+                                    <option value="session">Session</option>
+                                    <option value="student">Student</option>
+                                    <option value="participant">Participant</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Admin Email</label>
+                                <input type="text" id="filterAdminEmail" class="form-input" placeholder="Filter by email...">
+                            </div>
+                        </div>
+                        <button id="applyFilters" class="btn btn-primary mt-2">Apply Filters</button>
+                        <button id="clearFilters" class="btn btn-secondary mt-2">Clear Filters</button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Activity Log</h3>
+                    </div>
+                    <div id="logsTableArea">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Log Details Modal -->
+    <div id="logDetailsModal" class="modal-overlay">
+        <div class="modal" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Log Entry Details</h3>
+                <button class="modal-close" onclick="hideModal('logDetailsModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="logDetailsContent">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideModal('logDetailsModal')">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+    </div>
+    
+    <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/admin.js"></script>
+    <script>
+        let allLogs = [];
+        let filters = { actionType: '', entityType: '', adminEmail: '' };
+        
+        async function loadLogs() {
+            showLoading();
+            try {
+                const response = await fetch('/admin/api/audit-logs', {
+                    headers: auth.getAuthHeaders()
+                });
+                
+                if (!response.ok) throw new Error('Failed to load logs');
+                
+                const data = await response.json();
+                allLogs = data.logs;
+                displayLogs(allLogs);
+            } catch (error) {
+                showAlert('Failed to load logs: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        function displayLogs(logs) {
+            const area = document.getElementById('logsTableArea');
+            
+            if (!logs || logs.length === 0) {
+                area.innerHTML = '<p class="text-center">No activity logs found</p>';
+                return;
+            }
+            
+            area.innerHTML = `
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Admin</th>
+                                <th>Action</th>
+                                <th>Entity</th>
+                                <th>Description</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${logs.map(log => `
+                                <tr>
+                                    <td>${new Date(log.created_at).toLocaleString()}</td>
+                                    <td>${log.admin_email}</td>
+                                    <td><span class="badge badge-${getActionBadge(log.action_type)}">${log.action_type}</span></td>
+                                    <td>${log.entity_type}${log.entity_name ? ': ' + log.entity_name : ''}</td>
+                                    <td>${log.description || '-'}</td>
+                                    <td>
+                                        <button onclick="viewLogDetails('${log.id}')" class="btn btn-sm btn-primary">Details</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        function getActionBadge(action) {
+            const badges = {
+                'CREATE': 'success',
+                'UPDATE': 'warning',
+                'DELETE': 'danger'
+            };
+            return badges[action] || 'secondary';
+        }
+        
+        function viewLogDetails(logId) {
+            const log = allLogs.find(l => l.id === logId);
+            if (!log) return;
+            
+            const oldValue = log.old_value ? JSON.parse(log.old_value) : null;
+            const newValue = log.new_value ? JSON.parse(log.new_value) : null;
+            
+            let content = `
+                <div class="form-group">
+                    <strong>Timestamp:</strong> ${new Date(log.created_at).toLocaleString()}
+                </div>
+                <div class="form-group">
+                    <strong>Admin:</strong> ${log.admin_email}
+                </div>
+                <div class="form-group">
+                    <strong>Action:</strong> ${log.action_type}
+                </div>
+                <div class="form-group">
+                    <strong>Entity:</strong> ${log.entity_type} ${log.entity_name ? '(' + log.entity_name + ')' : ''}
+                </div>
+            `;
+            
+            if (log.description) {
+                content += `
+                    <div class="form-group">
+                        <strong>Description:</strong> ${log.description}
+                    </div>
+                `;
+            }
+            
+            if (oldValue) {
+                content += `
+                    <div class="form-group">
+                        <strong>Old Value:</strong>
+                        <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;">${JSON.stringify(oldValue, null, 2)}</pre>
+                    </div>
+                `;
+            }
+            
+            if (newValue) {
+                content += `
+                    <div class="form-group">
+                        <strong>New Value:</strong>
+                        <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;">${JSON.stringify(newValue, null, 2)}</pre>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('logDetailsContent').innerHTML = content;
+            showModal('logDetailsModal');
+        }
+        
+        function applyFilters() {
+            filters.actionType = document.getElementById('filterActionType').value;
+            filters.entityType = document.getElementById('filterEntityType').value;
+            filters.adminEmail = document.getElementById('filterAdminEmail').value.toLowerCase();
+            
+            let filtered = allLogs.filter(log => {
+                if (filters.actionType && log.action_type !== filters.actionType) return false;
+                if (filters.entityType && log.entity_type !== filters.entityType) return false;
+                if (filters.adminEmail && !log.admin_email.toLowerCase().includes(filters.adminEmail)) return false;
+                return true;
+            });
+            
+            displayLogs(filtered);
+        }
+        
+        function clearFilters() {
+            document.getElementById('filterActionType').value = '';
+            document.getElementById('filterEntityType').value = '';
+            document.getElementById('filterAdminEmail').value = '';
+            filters = { actionType: '', entityType: '', adminEmail: '' };
+            displayLogs(allLogs);
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await adminPanel.initialize();
+            await loadLogs();
+            
+            document.getElementById('applyFilters').addEventListener('click', applyFilters);
+            document.getElementById('clearFilters').addEventListener('click', clearFilters);
+            
+            document.getElementById('logoutBtn').addEventListener('click', async () => {
+                await auth.logout();
+                window.location.href = '/';
+            });
+            
+            i18n.updatePageTexts();
+        });
+    </script>
+</body>
+</html>

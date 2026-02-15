@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Students - DSS Talk Admin</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="page-wrapper">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <a href="/admin/dashboard" class="logo">DSS Talk Admin</a>
+                    
+                    <nav class="nav-menu">
+                        <div class="nav-item">
+                            <a href="/admin/dashboard" class="nav-link" data-i18n="back">Back</a>
+                        </div>
+                        <div class="nav-item">
+                            <a href="/admin/logs" class="nav-link">Admin Logs</a>
+                        </div>
+                        <div class="nav-item">
+                            <button id="logoutBtn" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="content-wrapper">
+            <div class="container">
+                <div class="flex-between mb-3">
+                    <h1 data-i18n="manageStudents">Manage Students</h1>
+                    <div class="flex gap-2">
+                        <button onclick="showModal('importModal')" class="btn btn-primary" data-i18n="importCSV">Import CSV</button>
+                        <button onclick="showModal('addStudentModal')" class="btn btn-success" data-i18n="addStudent">Add Student</button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <input type="text" id="searchInput" class="form-input" data-i18n-placeholder="search" placeholder="Search students...">
+                    </div>
+                    <div id="studentsTableArea">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- CSV Import Modal -->
+    <div id="importModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" data-i18n="importCSV">Import CSV</h3>
+                <button class="modal-close" onclick="hideModal('importModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">CSV File</label>
+                    <input type="file" id="csvFile" class="form-input" accept=".csv">
+                    <span class="form-help">Expected format: full_name,grade</span>
+                </div>
+                <div id="importPreview"></div>
+                <div id="importResult"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideModal('importModal')" data-i18n="cancel">Cancel</button>
+                <button id="importBtn" class="btn btn-primary" data-i18n="importStudents">Import Students</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Student Modal -->
+    <div id="addStudentModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" data-i18n="addStudent">Add Student</h3>
+                <button class="modal-close" onclick="hideModal('addStudentModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addStudentForm">
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="fullName">Full Name</label>
+                        <input type="text" id="studentName" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="grade">Grade</label>
+                        <input type="number" id="studentGrade" class="form-input" min="1" max="12">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="email">Email</label>
+                        <input type="email" id="studentEmail" class="form-input">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideModal('addStudentModal')" data-i18n="cancel">Cancel</button>
+                <button id="saveStudentBtn" class="btn btn-primary" data-i18n="save">Save</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Student Modal -->
+    <div id="editStudentModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" data-i18n="edit">Edit Student</h3>
+                <button class="modal-close" onclick="hideModal('editStudentModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editStudentForm">
+                    <input type="hidden" id="editStudentId">
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="fullName">Full Name</label>
+                        <input type="text" id="editStudentName" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="grade">Grade</label>
+                        <input type="number" id="editStudentGrade" class="form-input" min="1" max="12">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="email">Email</label>
+                        <input type="email" id="editStudentEmail" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="editStudentActive"> 
+                            <span data-i18n="active">Active</span>
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideModal('editStudentModal')" data-i18n="cancel">Cancel</button>
+                <button id="updateStudentBtn" class="btn btn-primary" data-i18n="save">Save</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+    </div>
+    
+    <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/admin.js"></script>
+    <script>
+        let allStudents = [];
+        let csvContent = '';
+        
+        async function loadStudents() {
+            showLoading();
+            try {
+                allStudents = await adminPanel.loadStudents();
+                displayStudents(allStudents);
+            } catch (error) {
+                showAlert('Failed to load students: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        function displayStudents(students) {
+            const area = document.getElementById('studentsTableArea');
+            
+            if (!students || students.length === 0) {
+                area.innerHTML = '<p class="text-center">No students found</p>';
+                return;
+            }
+            
+            area.innerHTML = `
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>${i18n.t('fullName')}</th>
+                                <th>${i18n.t('grade')}</th>
+                                <th>${i18n.t('email')}</th>
+                                <th>Status</th>
+                                <th>${i18n.t('actions')}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${students.map(s => `
+                                <tr>
+                                    <td>${s.full_name}</td>
+                                    <td>${s.grade || '-'}</td>
+                                    <td>${s.email || '-'}</td>
+                                    <td>
+                                        <span class="badge badge-${s.is_active ? 'success' : 'secondary'}">
+                                            ${s.is_active ? i18n.t('active') : i18n.t('inactive')}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button onclick="editStudent('${s.id}')" class="btn btn-sm btn-primary">${i18n.t('edit')}</button>
+                                        <button onclick="deleteStudent('${s.id}')" class="btn btn-sm btn-danger">${i18n.t('delete')}</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        // CSV Import
+        document.getElementById('csvFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    csvContent = event.target.result;
+                    document.getElementById('importPreview').innerHTML = `
+                        <div class="alert alert-info">
+                            File loaded: ${file.name} (${Math.round(file.size / 1024)} KB)
+                        </div>
+                    `;
+                };
+                reader.readAsText(file);
+            }
+        });
+        
+        document.getElementById('importBtn').addEventListener('click', async () => {
+            if (!csvContent) {
+                showAlert('Please select a CSV file', 'error');
+                return;
+            }
+            
+            showLoading();
+            try {
+                const result = await adminPanel.importCSV(csvContent);
+                
+                const resultDiv = document.getElementById('importResult');
+                resultDiv.innerHTML = `
+                    <div class="alert alert-${result.success ? 'success' : 'error'}">
+                        <p><strong>Import Complete</strong></p>
+                        <p>Total rows: ${result.total_rows}</p>
+                        <p>Imported: ${result.imported}</p>
+                        <p>Skipped: ${result.skipped}</p>
+                        ${result.errors && result.errors.length > 0 ? `
+                            <p><strong>Errors:</strong></p>
+                            <ul>
+                                ${result.errors.map(e => `<li>${e}</li>`).join('')}
+                            </ul>
+                        ` : ''}
+                    </div>
+                `;
+                
+                if (result.imported > 0) {
+                    await loadStudents();
+                }
+            } catch (error) {
+                showAlert('Import failed: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+        
+        // Add Student
+        document.getElementById('saveStudentBtn').addEventListener('click', async () => {
+            const name = document.getElementById('studentName').value;
+            const grade = document.getElementById('studentGrade').value;
+            const email = document.getElementById('studentEmail').value;
+            
+            if (!name) {
+                showAlert('Name is required', 'error');
+                return;
+            }
+            
+            showLoading();
+            try {
+                await adminPanel.createStudent({
+                    full_name: name,
+                    grade: grade ? parseInt(grade) : null,
+                    email: email || null
+                });
+                
+                showAlert('Student created successfully', 'success');
+                hideModal('addStudentModal');
+                document.getElementById('addStudentForm').reset();
+                await loadStudents();
+            } catch (error) {
+                showAlert('Failed to create student: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+        
+        // Edit Student
+        function editStudent(studentId) {
+            const student = allStudents.find(s => s.id === studentId);
+            if (!student) return;
+            
+            document.getElementById('editStudentId').value = student.id;
+            document.getElementById('editStudentName').value = student.full_name;
+            document.getElementById('editStudentGrade').value = student.grade || '';
+            document.getElementById('editStudentEmail').value = student.email || '';
+            document.getElementById('editStudentActive').checked = student.is_active;
+            
+            showModal('editStudentModal');
+        }
+        
+        document.getElementById('updateStudentBtn').addEventListener('click', async () => {
+            const id = document.getElementById('editStudentId').value;
+            const name = document.getElementById('editStudentName').value;
+            const grade = document.getElementById('editStudentGrade').value;
+            const email = document.getElementById('editStudentEmail').value;
+            const active = document.getElementById('editStudentActive').checked;
+            
+            showLoading();
+            try {
+                await adminPanel.updateStudent(id, {
+                    full_name: name,
+                    grade: grade ? parseInt(grade) : null,
+                    email: email || null,
+                    is_active: active
+                });
+                
+                showAlert('Student updated successfully', 'success');
+                hideModal('editStudentModal');
+                await loadStudents();
+            } catch (error) {
+                showAlert('Failed to update student: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+        
+        // Delete Student
+        async function deleteStudent(studentId) {
+            if (!confirm(i18n.t('confirmDelete'))) return;
+            
+            showLoading();
+            try {
+                await adminPanel.deleteStudent(studentId);
+                showAlert('Student deleted successfully', 'success');
+                await loadStudents();
+            } catch (error) {
+                showAlert('Failed to delete student: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Search
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const filtered = allStudents.filter(s => 
+                s.full_name.toLowerCase().includes(query) ||
+                (s.grade && s.grade.toString().includes(query)) ||
+                (s.email && s.email.toLowerCase().includes(query))
+            );
+            displayStudents(filtered);
+        });
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await adminPanel.initialize();
+            await loadStudents();
+            
+            document.getElementById('logoutBtn').addEventListener('click', async () => {
+                await auth.logout();
+                window.location.href = '/';
+            });
+            
+            i18n.updatePageTexts();
+        });
+    </script>
+</body>
+</html>

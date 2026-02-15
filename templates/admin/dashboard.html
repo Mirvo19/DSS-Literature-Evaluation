@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - DSS Talk</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="page-wrapper">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <a href="/admin/dashboard" class="logo">DSS Talk Admin</a>
+                    
+                    <nav class="nav-menu">
+                        <div class="nav-item">
+                            <select id="languageSelect" class="form-select">
+                                <option value="en" data-i18n="english">English</option>
+                                <option value="ne" data-i18n="nepali">Nepali</option>
+                            </select>
+                        </div>
+                        
+                        <div class="nav-item">
+                            <a href="/dashboard" class="nav-link" data-i18n="dashboard">Dashboard</a>
+                        </div>
+                        
+                        <div class="nav-item">
+                            <a href="/admin/logs" class="nav-link">Admin Logs</a>
+                        </div>
+                        
+                        <div class="nav-item">
+                            <button id="logoutBtn" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="content-wrapper">
+            <div class="container">
+                <h1 data-i18n="adminDashboard">Admin Dashboard</h1>
+                
+                <div class="grid grid-cols-3 gap-3 mt-4">
+                    <!-- Students Card -->
+                    <a href="/admin/students" class="card" style="text-decoration: none; color: inherit;">
+                        <div class="card-body text-center">
+                            <h3 data-i18n="students">Students</h3>
+                            <p data-i18n="manageStudents">Manage Students</p>
+                        </div>
+                    </a>
+                    
+                    <!-- Sessions Card -->
+                    <a href="/admin/sessions" class="card" style="text-decoration: none; color: inherit;">
+                        <div class="card-body text-center">
+                            <h3 data-i18n="sessions">Sessions</h3>
+                            <p data-i18n="manageSessions">Manage Sessions</p>
+                        </div>
+                    </a>
+                    
+                    <!-- Weeks Card -->
+                    <a href="/admin/weeks" class="card" style="text-decoration: none; color: inherit;">
+                        <div class="card-body text-center">
+                            <h3 data-i18n="weeks">Weeks</h3>
+                            <p data-i18n="manageWeeks">Manage Weeks</p>
+                        </div>
+                    </a>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-3 mt-3">
+                    <!-- Judge Permissions Card -->
+                    <a href="/admin/judge-permissions" class="card" style="text-decoration: none; color: inherit;">
+                        <div class="card-body text-center">
+                            <h3>Judge Permissions</h3>
+                            <p>Manage Judge Access</p>
+                        </div>
+                    </a>
+                    
+                    <!-- Results & Winners Card -->
+                    <a href="/admin/results" class="card" style="text-decoration: none; color: inherit;">
+                        <div class="card-body text-center">
+                            <h3>Results & Winners</h3>
+                            <p>View Scores & Winners</p>
+                        </div>
+                    </a>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h3 class="card-title">Quick Actions</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="flex gap-2 flex-wrap">
+                            <a href="/admin/students" class="btn btn-primary" data-i18n="importCSV">Import CSV</a>
+                            <a href="/admin/weeks" class="btn btn-primary" data-i18n="createWeek">Create Week</a>
+                            <a href="/admin/sessions" class="btn btn-primary" data-i18n="createSession">Create Session</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h3 class="card-title">System Information</h3>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>User:</strong> <span id="userEmail"></span></p>
+                        <p><strong>Role:</strong> Administrator</p>
+                        <p><strong>Language:</strong> <span id="currentLang"></span></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/admin.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize admin panel
+            await adminPanel.initialize();
+            
+            // Set language
+            const langSelect = document.getElementById('languageSelect');
+            langSelect.value = i18n.getLanguage();
+            
+            langSelect.addEventListener('change', (e) => {
+                i18n.setLanguage(e.target.value);
+                window.location.reload();
+            });
+            
+            // Logout handler
+            const logoutBtn = document.getElementById('logoutBtn');
+            logoutBtn.addEventListener('click', async () => {
+                await auth.logout();
+                window.location.href = '/';
+            });
+            
+            // Display user info
+            if (auth.getUser()) {
+                document.getElementById('userEmail').textContent = auth.getUser().email;
+            }
+            document.getElementById('currentLang').textContent = i18n.getLanguage() === 'en' ? 'English' : 'Nepali';
+            
+            // Update page texts
+            i18n.updatePageTexts();
+        });
+    </script>
+</body>
+</html>
