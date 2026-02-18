@@ -38,12 +38,12 @@ wheels/
 Thumbs.db
 
 # Database migration files (use MASTER_SCHEMA.sql instead)
-database/schema.sql
-database/migration_*.sql
-database/fix_*.sql
-database/add_*.sql
-database/update_*.sql
-database/debug_*.py
+SQL/schema.sql
+SQL/migration_*.sql
+SQL/fix_*.sql
+SQL/add_*.sql
+SQL/update_*.sql
+SQL/debug_*.py
 
 # Documentation (keep only README.md and MASTER.md)
 *.md
