@@ -14,7 +14,7 @@ supabase = create_client(Config.SUPABASE_URL, Config.SUPABASE_KEY)
 @bp.route('/signup', methods=['POST'])
 def signup():
     try:
-        data = request.json
+        data = request.get_json(silent=True) or {}
         email = data.get('email')
         password = data.get('password')
         
@@ -66,7 +66,7 @@ def signup():
 @bp.route('/login', methods=['POST'])
 def login():
     try:
-        data = request.json
+        data = request.get_json(silent=True) or {}
         email = data.get('email')
         password = data.get('password')
         

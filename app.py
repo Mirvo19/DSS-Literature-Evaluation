@@ -1,4 +1,4 @@
-from flask import Flask, render_template, send_from_directory
+from flask import Flask, render_template, send_from_directory, redirect
 from flask_cors import CORS
 from config import Config
 import os
@@ -24,7 +24,11 @@ app.register_blueprint(en_pages.bp)
 app.register_blueprint(ne_pages.bp)
 
 @app.route('/')
-def index():
+def root():
+    return redirect('/login')
+
+@app.route('/login')
+def login_page():
     return render_template('login.html')
 
 @app.route('/static/<path:filename>')

@@ -73,8 +73,8 @@ def require_admin(f):
             
             if not result.data or len(result.data) == 0:
                 if is_html_request:
-                    # not admin, back to dashboard
-                    return redirect('/dashboard')
+                    # not admin, send back to login
+                    return redirect('/')
                 return jsonify({'error': 'Unauthorized. Admin access required.'}), 403
             
             request.user = user

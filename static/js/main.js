@@ -86,7 +86,8 @@ class App {
         const contentArea = document.getElementById('contentArea');
         
         try {
-            const response = await fetch(`/api/weeks-by-event/${this.currentEventId}`, {
+            const lang = window.APP_LANG || i18n.getLanguage();
+            const response = await fetch(`/api/weeks-by-event/${this.currentEventId}?lang=${lang}`, {
                 headers: auth.getAuthHeaders()
             });
             
@@ -97,7 +98,7 @@ class App {
                     <h2 data-i18n="weeks">${i18n.t('weeks')}</h2>
                     <div class="week-list">
                         ${data.weeks.map(week => `
-                            <div class="week-item" onclick="window.location.href='/week/${week.id}'">
+                            <div class="week-item" onclick="window.location.href='/${window.APP_LANG}/week/${week.id}'">
                                 <div class="week-number">
                                     ${i18n.t('session')} ${week.sessions.session_number} - ${i18n.t('week')} ${week.week_number}
                                 </div>
@@ -180,7 +181,7 @@ class App {
                                             <td>${topic}</td>
                                             <td>${week.date ? new Date(week.date).toLocaleDateString() : '-'}</td>
                                             <td>
-                                                <a href="/week-rankings/${week.id}" class="btn btn-sm btn-primary">
+                                                <a href="/${window.APP_LANG}/week-rankings/${week.id}" class="btn btn-sm btn-primary">
                                                     View Rankings
                                                 </a>
                                             </td>
