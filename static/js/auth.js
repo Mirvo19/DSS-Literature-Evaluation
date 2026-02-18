@@ -4,7 +4,8 @@ class Auth {
     constructor() {
         this.token = localStorage.getItem('access_token');
         this.user = JSON.parse(localStorage.getItem('user') || 'null');
-        this.isAdmin = localStorage.getItem('is_admin') === 'true';
+        this.isAdmin = false; //  verify from server
+        localStorage.removeItem('is_admin'); // Clear  value from old sessions of devlopment
     }
     
     async signup(email, password) {
@@ -95,9 +96,8 @@ class Auth {
             
             const data = await response.json();
             this.user = data.user;
-            this.isAdmin = data.is_admin;
+            this.isAdmin = data.is_admin; // Set from server only, never persisted
             localStorage.setItem('user', JSON.stringify(data.user));
-            localStorage.setItem('is_admin', data.is_admin);
             
             return true;
         } catch (error) {
@@ -113,7 +113,7 @@ class Auth {
         
         localStorage.setItem('access_token', token);
         localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('is_admin', isAdmin);
+        // is_admin is intentionally NOT stored in localStorage
     }
     
     clearSession() {
@@ -123,7 +123,6 @@ class Auth {
         
         localStorage.removeItem('access_token');
         localStorage.removeItem('user');
-        localStorage.removeItem('is_admin');
         localStorage.removeItem('selected_event');
         localStorage.removeItem('selected_grade');
     }
