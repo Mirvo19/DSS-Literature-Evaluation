@@ -179,7 +179,9 @@ async function requireAdmin() {
     
     if (!auth.checkAdmin()) {
         alert(i18n.t('error') + ': Admin access required');
-        window.location.href = '/dashboard';
+        // redirect to the correct language side's dashboard
+        const lang = window.APP_LANG || localStorage.getItem('language') || 'en';
+        window.location.href = '/' + lang + '/dashboard';
         return false;
     }
     

@@ -1,8 +1,8 @@
-// code
+// i18n
 
 const translations = {
     en: {
-        // code
+        // auth
         login: 'Login',
         signup: 'Sign Up',
         logout: 'Logout',
@@ -14,13 +14,13 @@ const translations = {
         alreadyHaveAccount: 'Already have an account?',
         dontHaveAccount: "Don't have an account?",
         
-        // code
+        // nav
         dashboard: 'Dashboard',
         winners: 'Winners',
         adminPanel: 'Admin Panel',
         events: 'Events',
         
-        // code
+        // events
         debate: 'Debate',
         presentation: 'Presentation',
         extempore: 'Extempore',
@@ -28,7 +28,7 @@ const translations = {
         selectLanguage: 'Select Language',
         selectGrade: 'Select Grade',
         
-        // code
+        // language
         english: 'English',
         nepali: 'Nepali',
         
@@ -47,14 +47,14 @@ const translations = {
         topic: 'Topic',
         date: 'Date',
         
-        // code
+        // winners
         recentWinners: 'Recent Winners',
         position: 'Position',
         studentName: 'Student Name',
         eventName: 'Event',
         weekNumber: 'Week',
         
-        // code
+        // admin
         adminDashboard: 'Admin Dashboard',
         students: 'Students',
         sessions: 'Sessions',
@@ -71,7 +71,7 @@ const translations = {
         save: 'Save',
         cancel: 'Cancel',
         
-        // code
+        // csv
         uploadCSV: 'Upload CSV File',
         csvPreview: 'CSV Preview',
         importStudents: 'Import Students',
@@ -80,7 +80,7 @@ const translations = {
         skipped: 'Skipped',
         errors: 'Errors',
         
-        // code
+        // week creation
         weekNumber: 'Week Number',
         participantCount: 'Number of Participants',
         randomSelection: 'Random Selection',
@@ -89,7 +89,7 @@ const translations = {
         resetIfInsufficient: 'Reset session if insufficient students',
         createPartialWeek: 'Create partial week',
         
-        // code
+        // messages
         loading: 'Loading...',
         noData: 'No data available',
         success: 'Success',
@@ -100,25 +100,25 @@ const translations = {
         saveSuccess: 'Saved successfully',
         updateSuccess: 'Updated successfully',
         
-        // code
+        // validation
         required: 'This field is required',
         invalidEmail: 'Invalid email address',
         passwordMismatch: 'Passwords do not match',
         passwordTooShort: 'Password must be at least 6 characters',
         
-        // code
+        // student fields
         fullName: 'Full Name',
         grade: 'Grade',
         active: 'Active',
         inactive: 'Inactive',
         
-        // code
+        // session fields
         sessionNumber: 'Session Number',
         sessionName: 'Session Name',
         startDate: 'Start Date',
         endDate: 'End Date',
         
-        // code
+        // misc
         search: 'Search',
         filter: 'Filter',
         all: 'All',
@@ -133,7 +133,7 @@ const translations = {
     },
     
     ne: {
-        // code
+        // auth
         login: 'लगइन',
         signup: 'साइन अप',
         logout: 'लगआउट',
@@ -145,13 +145,13 @@ const translations = {
         alreadyHaveAccount: 'पहिले नै खाता छ?',
         dontHaveAccount: 'खाता छैन?',
         
-        // code
+        // nav
         dashboard: 'ड्यासबोर्ड',
         winners: 'विजेताहरू',
         adminPanel: 'प्रशासक प्यानल',
         events: 'कार्यक्रमहरू',
         
-        // Events
+        // events
         debate: 'बहस',
         presentation: 'प्रस्तुतीकरण',
         extempore: 'तत्काल भाषण',
@@ -159,15 +159,15 @@ const translations = {
         selectLanguage: 'भाषा चयन गर्नुहोस्',
         selectGrade: 'कक्षा चयन गर्नुहोस्',
         
-        // Language
+        // language
         english: 'अंग्रेजी',
         nepali: 'नेपाली',
         
-        // Grades
+        // grades
         grade11: 'कक्षा ११',
         grade12: 'कक्षा १२',
         
-        // Week Details
+        // week details
         week: 'हप्ता',
         session: 'सत्र',
         participants: 'सहभागीहरू',
@@ -178,14 +178,14 @@ const translations = {
         topic: 'विषय',
         date: 'मिति',
         
-        // Winners Page
+        // winners
         recentWinners: 'हालका विजेताहरू',
         position: 'स्थान',
         studentName: 'विद्यार्थीको नाम',
         eventName: 'कार्यक्रम',
         weekNumber: 'हप्ता',
         
-        // Admin
+        // admin
         adminDashboard: 'प्रशासक ड्यासबोर्ड',
         students: 'विद्यार्थीहरू',
         sessions: 'सत्रहरू',
@@ -202,7 +202,7 @@ const translations = {
         save: 'सुरक्षित गर्नुहोस्',
         cancel: 'रद्द गर्नुहोस्',
         
-        // CSV Import
+        // csv
         uploadCSV: 'CSV फाइल अपलोड गर्नुहोस्',
         csvPreview: 'CSV पूर्वावलोकन',
         importStudents: 'विद्यार्थी आयात गर्नुहोस्',
@@ -211,7 +211,7 @@ const translations = {
         skipped: 'छोडियो',
         errors: 'त्रुटिहरू',
         
-        // Week Creation
+        // week creation
         weekNumber: 'हप्ता नम्बर',
         participantCount: 'सहभागीहरूको संख्या',
         randomSelection: 'अनियमित छनौट',
@@ -220,7 +220,7 @@ const translations = {
         resetIfInsufficient: 'अपर्याप्त विद्यार्थी भएमा सत्र रिसेट गर्नुहोस्',
         createPartialWeek: 'आंशिक हप्ता सिर्जना गर्नुहोस्',
         
-        // Messages
+        // messages
         loading: 'लोड हुँदैछ...',
         noData: 'कुनै डाटा उपलब्ध छैन',
         success: 'सफल',
@@ -231,25 +231,25 @@ const translations = {
         saveSuccess: 'सफलतापूर्वक सुरक्षित गरियो',
         updateSuccess: 'सफलतापूर्वक अद्यावधिक गरियो',
         
-        // Form Validation
+        // validation
         required: 'यो फिल्ड आवश्यक छ',
         invalidEmail: 'अमान्य इमेल ठेगाना',
         passwordMismatch: 'पासवर्डहरू मेल खाँदैनन्',
         passwordTooShort: 'पासवर्ड कम्तिमा ६ अक्षर हुनुपर्छ',
         
-        // Student Fields
+        // student fields
         fullName: 'पूरा नाम',
         grade: 'कक्षा',
         active: 'सक्रिय',
         inactive: 'निष्क्रिय',
         
-        // Session Fields
+        // session fields
         sessionNumber: 'सत्र नम्बर',
         sessionName: 'सत्र नाम',
         startDate: 'सुरु मिति',
         endDate: 'अन्त्य मिति',
         
-        // Other
+        // misc
         search: 'खोज्नुहोस्',
         filter: 'फिल्टर',
         all: 'सबै',
@@ -270,7 +270,7 @@ class I18n {
     }
     
     loadLanguage() {
-        // code
+        // load saved or default
         const saved = localStorage.getItem('language');
         if (saved && (saved === 'en' || saved === 'ne')) {
             return saved;
@@ -306,7 +306,7 @@ class I18n {
     }
     
     updatePageTexts() {
-        // code
+        // update text content
         document.querySelectorAll('[data-i18n]').forEach(element => {
             const key = element.getAttribute('data-i18n');
             const translation = this.t(key);
@@ -318,13 +318,13 @@ class I18n {
             }
         });
         
-        // code
+        // update placeholders
         document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
             const key = element.getAttribute('data-i18n-placeholder');
             element.placeholder = this.t(key);
         });
         
-        // code
+        // sync language dropdown
         const langSelect = document.getElementById('languageSelect');
         if (langSelect) {
             langSelect.value = this.currentLanguage;
@@ -332,10 +332,10 @@ class I18n {
     }
 }
 
-// code
+// global instance
 const i18n = new I18n();
 
-// code
+// export for testing
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = i18n;
 }

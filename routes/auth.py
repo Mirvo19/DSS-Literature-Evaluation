@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template, make_response
+from flask import Blueprint, request, jsonify, make_response
 from supabase import create_client
 from config import Config
 from utils.auth import is_user_admin
@@ -8,9 +8,8 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 # init supabase
 supabase = create_client(Config.SUPABASE_URL, Config.SUPABASE_KEY)
 
-@bp.route('/signup', methods=['GET'])
-def signup_page():
-    return render_template('signup.html')
+# note: login/signup page routes live in routes/en/pages.py and routes/ne/pages.py
+# this blueprint is API-only (POST /auth/login, POST /auth/signup, etc.)
 
 @bp.route('/signup', methods=['POST'])
 def signup():
@@ -125,7 +124,7 @@ def logout():
             token = token[7:]
             supabase.auth.sign_out()
         
-        # Clear the cookie
+        # clear the cookie
         resp = make_response(jsonify({'message': 'Logout successful'}), 200)
         resp.set_cookie('access_token', '', expires=0, httponly=True, secure=True, samesite='Lax')
         return resp

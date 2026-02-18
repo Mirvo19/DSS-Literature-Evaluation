@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify
 from supabase import create_client
 from config import Config
 from utils.auth import require_admin
@@ -12,42 +12,8 @@ bp = Blueprint('admin', __name__, url_prefix='/admin')
 # init supabase
 supabase = create_client(Config.SUPABASE_URL, Config.SUPABASE_SERVICE_KEY)
 
-# pages
-
-@bp.route('/dashboard')
-@require_admin
-def admin_dashboard_page():
-    return render_template('admin/dashboard.html')
-
-@bp.route('/students')
-@require_admin
-def admin_students_page():
-    return render_template('admin/students.html')
-
-@bp.route('/sessions')
-@require_admin
-def admin_sessions_page():
-    return render_template('admin/sessions.html')
-
-@bp.route('/weeks')
-@require_admin
-def admin_weeks_page():
-    return render_template('admin/weeks.html')
-
-@bp.route('/logs')
-@require_admin
-def admin_logs_page():
-    return render_template('admin/logs.html')
-
-@bp.route('/judge-permissions')
-@require_admin
-def admin_judge_permissions_page():
-    return render_template('admin/judge_permissions.html')
-
-@bp.route('/results')
-@require_admin
-def admin_results_page():
-    return render_template('admin/results.html')
+# note: page routes live in routes/en/pages.py and routes/ne/pages.py
+# this blueprint is API-only so it stays language-agnostic
 
 # student api
 
@@ -180,12 +146,19 @@ def import_students_csv():
 @bp.route('/api/sessions', methods=['GET'])
 @require_admin
 def get_all_sessions():
-    # get with event info
+    # get with event info, optionally filtered by language
     try:
-        response = supabase.table('sessions')\
+        language = request.args.get('lang')
+        
+        query = supabase.table('sessions')\
             .select('*, events!inner(name, name_nepali)')\
-            .order('created_at', desc=True)\
-            .execute()
+            .order('created_at', desc=True)
+        
+        # filter by language if provided (admin sees only their language side)
+        if language in ('en', 'ne'):
+            query = query.eq('language', language)
+        
+        response = query.execute()
         
         return jsonify({'sessions': response.data}), 200
     except Exception as e:
@@ -201,10 +174,16 @@ def create_session():
         if not data.get('event_id') or not data.get('name'):
             return jsonify({'error': 'Event ID and name are required'}), 400
         
+        # language must be provided so the session belongs to the right side
+        language = data.get('language', 'en')
+        if language not in ('en', 'ne'):
+            return jsonify({'error': 'language must be en or ne'}), 400
+        
         response = supabase.table('sessions').insert({
             'event_id': data['event_id'],
             'name': data['name'],
             'session_number': data.get('session_number', 1),
+            'language': language,
             'start_date': data.get('start_date'),
             'end_date': data.get('end_date'),
             'is_active': data.get('is_active', True)

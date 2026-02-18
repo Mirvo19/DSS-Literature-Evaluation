@@ -1,9 +1,12 @@
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify
 from supabase import create_client
 from config import Config
 from functools import wraps
 
 bp = Blueprint('judge', __name__, url_prefix='/judge')
+
+# note: judge/scoring page route lives in routes/en/pages.py and routes/ne/pages.py
+# this blueprint is API-only (/judge/api/*)
 
 # init supabase
 supabase = create_client(Config.SUPABASE_URL, Config.SUPABASE_SERVICE_KEY)
@@ -44,13 +47,6 @@ def get_judge_email_from_request():
     except Exception as e:
         print(f"Error getting judge email: {e}")
         return None, None
-
-# judge pages
-
-@bp.route('/scoring')
-def judge_scoring_page():
-    # scoring page
-    return render_template('judge/scoring.html')
 
 # judge api
 

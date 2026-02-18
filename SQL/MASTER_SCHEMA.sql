@@ -45,17 +45,22 @@ CREATE TABLE sessions (
     event_id UUID NOT NULL,
     name VARCHAR(100) NOT NULL,
     session_number INTEGER NOT NULL,
+    -- language: 'en' = English side, 'ne' = Nepali side
+    -- isolates the two language experiences at the data layer
+    language VARCHAR(2) NOT NULL DEFAULT 'en' CHECK (language IN ('en', 'ne')),
     start_date DATE,
     end_date DATE,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_event FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
-    CONSTRAINT unique_event_session UNIQUE (event_id, session_number)
+    -- unique per event + session number + language so EN and NE can share numbers
+    CONSTRAINT unique_event_session_language UNIQUE (event_id, session_number, language)
 );
 
 CREATE INDEX idx_sessions_event_id ON sessions(event_id);
 CREATE INDEX idx_sessions_active ON sessions(is_active);
+CREATE INDEX idx_sessions_language ON sessions(language);
 
 -- STUDENTS TABLE
 CREATE TABLE students (
@@ -411,9 +416,9 @@ WITH CHECK (true);
 -- VIEWS
 -- =============================================================================
 
--- View for recent winners
+-- View for recent winners (exposes session_language for per-language filtering)
 CREATE OR REPLACE VIEW recent_winners AS
-SELECT 
+SELECT
     p.id,
     p.week_id,
     p.student_id,
@@ -425,19 +430,20 @@ SELECT
     w.topic,
     w.topic_nepali,
     sess.session_number,
-    e.name as event_name,
-    e.name_nepali as event_name_nepali
+    sess.language   AS session_language,
+    e.name          AS event_name,
+    e.name_nepali   AS event_name_nepali
 FROM participants p
-JOIN students s ON p.student_id = s.id
-JOIN weeks w ON p.week_id = w.id
-JOIN sessions sess ON w.session_id = sess.id
-JOIN events e ON sess.event_id = e.id
+JOIN students s    ON p.student_id  = s.id
+JOIN weeks w       ON p.week_id     = w.id
+JOIN sessions sess ON w.session_id  = sess.id
+JOIN events e      ON sess.event_id = e.id
 WHERE p.is_winner = true
 ORDER BY w.date DESC, p.position ASC;
 
--- View for week details with counts
+-- View for week details with counts (exposes session_language for per-language filtering)
 CREATE OR REPLACE VIEW week_details AS
-SELECT 
+SELECT
     w.id,
     w.session_id,
     w.week_number,
@@ -446,22 +452,25 @@ SELECT
     w.date,
     w.is_partial,
     sess.session_number,
-    sess.name as session_name,
-    e.id as event_id,
-    e.name as event_name,
-    e.name_nepali as event_name_nepali,
-    COUNT(DISTINCT p.id) as participant_count,
-    COUNT(DISTINCT wj.judge_id) as judge_count,
-    COUNT(DISTINCT wc.criteria_id) as criteria_count
+    sess.name        AS session_name,
+    sess.language    AS session_language,
+    e.id             AS event_id,
+    e.name           AS event_name,
+    e.name_nepali    AS event_name_nepali,
+    COUNT(DISTINCT p.id)        AS participant_count,
+    COUNT(DISTINCT wj.judge_id) AS judge_count,
+    COUNT(DISTINCT wc.criteria_id) AS criteria_count
 FROM weeks w
 JOIN sessions sess ON w.session_id = sess.id
 JOIN events e ON sess.event_id = e.id
-LEFT JOIN participants p ON w.id = p.week_id
-LEFT JOIN week_judges wj ON w.id = wj.week_id
+LEFT JOIN participants p  ON w.id = p.week_id
+LEFT JOIN week_judges  wj ON w.id = wj.week_id
 LEFT JOIN week_criteria wc ON w.id = wc.week_id
-GROUP BY w.id, w.session_id, w.week_number, w.topic, w.topic_nepali, 
-         w.date, w.is_partial, sess.session_number, sess.name, 
-         e.id, e.name, e.name_nepali;
+GROUP BY
+    w.id, w.session_id, w.week_number, w.topic, w.topic_nepali,
+    w.date, w.is_partial,
+    sess.session_number, sess.name, sess.language,
+    e.id, e.name, e.name_nepali;
 
 -- =============================================================================
 -- DEFAULT JUDGING CRITERIA
@@ -483,6 +492,7 @@ INSERT INTO judging_criteria (name, name_nepali, category, max_points) VALUES
 COMMENT ON TABLE admins IS 'Stores user IDs of administrators';
 COMMENT ON TABLE events IS 'Main events: Debate, Presentation, Extempore';
 COMMENT ON TABLE sessions IS 'Sessions within each event';
+COMMENT ON COLUMN sessions.language IS 'Language side: en = English, ne = Nepali. Completely separates data between the two language experiences.';
 COMMENT ON TABLE students IS 'Student roster for all events';
 COMMENT ON TABLE weeks IS 'Individual weeks within sessions';
 COMMENT ON TABLE judges IS 'Judges who evaluate participants';

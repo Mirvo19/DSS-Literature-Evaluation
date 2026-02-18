@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify
 from supabase import create_client
 from config import Config
 from utils.auth import require_auth
@@ -6,28 +6,9 @@ from utils.auth import require_auth
 bp = Blueprint('events', __name__)
 api_bp = Blueprint('events_api', __name__, url_prefix='/api')
 
-# init supabase with service key for accessing judge scores in published results
+# note: page routes live in routes/en/pages.py and routes/ne/pages.py
+# init supabase with service key for judge scores in results
 supabase = create_client(Config.SUPABASE_URL, Config.SUPABASE_SERVICE_KEY)
-
-# pages
-
-@bp.route('/dashboard')
-def dashboard_page():
-    return render_template('dashboard.html')
-
-@bp.route('/week/<week_id>')
-def week_detail_page(week_id):
-    return render_template('week-detail.html')
-
-@bp.route('/winners')
-def winners_page():
-    return render_template('winners.html')
-
-@bp.route('/week-rankings/<week_id>')
-def week_rankings_page(week_id):
-    return render_template('week-rankings.html')
-
-# api
 
 @api_bp.route('/events', methods=['GET'])
 def get_events():
@@ -41,12 +22,17 @@ def get_events():
 @require_auth
 def get_sessions(event_id):
     try:
-        response = supabase.table('sessions')\
+        # filter by language so each side only sees its own sessions
+        language = request.args.get('lang', 'en')
+        
+        query = supabase.table('sessions')\
             .select('*')\
             .eq('event_id', event_id)\
             .eq('is_active', True)\
-            .order('session_number', desc=True)\
-            .execute()
+            .eq('language', language)\
+            .order('session_number', desc=True)
+        
+        response = query.execute()
         
         return jsonify({'sessions': response.data}), 200
     except Exception as e:
@@ -69,29 +55,24 @@ def get_weeks(session_id):
 @api_bp.route('/week-detail/<week_id>', methods=['GET'])
 @require_auth
 def get_week_detail(week_id):
-    # code
     try:
-        # code
         week_response = supabase.table('weeks')\
             .select('*, sessions!inner(session_number, name, event_id, events!inner(name, name_nepali))')\
             .eq('id', week_id)\
             .single()\
             .execute()
         
-        # code
         participants_response = supabase.table('participants')\
             .select('*, students!inner(full_name, grade)')\
             .eq('week_id', week_id)\
             .order('score', desc=True)\
             .execute()
         
-        # code
         judges_response = supabase.table('week_judges')\
             .select('*, judges!inner(full_name, title)')\
             .eq('week_id', week_id)\
             .execute()
         
-        # code
         criteria_response = supabase.table('week_criteria')\
             .select('*, judging_criteria!inner(name, name_nepali, max_points)')\
             .eq('week_id', week_id)\
@@ -109,7 +90,7 @@ def get_week_detail(week_id):
 
 @api_bp.route('/winners', methods=['GET'])
 def get_winners():
-    """Get weeks that have published winners (not individual participants)"""
+    # get weeks with published winners
     try:
         event_id = request.args.get('event_id')
         limit = request.args.get('limit', 50)
@@ -148,7 +129,7 @@ def get_winners():
 
 @api_bp.route('/week-rankings/<week_id>', methods=['GET'])
 def get_week_rankings(week_id):
-    """Get all participants ranked by position for a specific week"""
+    # get all participants ranked for a week
     try:
         print(f"Getting rankings for week: {week_id}")
         
@@ -251,13 +232,15 @@ def get_week_rankings(week_id):
 @api_bp.route('/weeks-by-event/<event_id>', methods=['GET'])
 @require_auth
 def get_weeks_by_event(event_id):
-    # code
     try:
-        # code
+        # filter by language so each side sees its own data
+        language = request.args.get('lang', 'en')
+        
         sessions_response = supabase.table('sessions')\
             .select('id')\
             .eq('event_id', event_id)\
             .eq('is_active', True)\
+            .eq('language', language)\
             .execute()
         
         if not sessions_response.data:
@@ -265,7 +248,6 @@ def get_weeks_by_event(event_id):
         
         session_ids = [s['id'] for s in sessions_response.data]
         
-        # code
         weeks_response = supabase.table('weeks')\
             .select('*, sessions!inner(session_number, name)')\
             .in_('session_id', session_ids)\

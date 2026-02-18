@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ lang }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - DSS Talk</title>
+    <title>{% if lang == 'ne' %}ड्यासबोर्ड - DSS Talk{% else %}Dashboard - DSS Talk{% endif %}</title>
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
@@ -12,41 +12,33 @@
         <header class="header">
             <div class="container">
                 <div class="header-content">
-                    <a href="/dashboard" class="logo">DSS Talk</a>
-                    
+                    <a href="/{{ lang }}/dashboard" class="logo">DSS Talk</a>
+
                     <nav class="nav-menu">
                         <!-- Event Selector -->
                         <div class="nav-item">
                             <select id="eventSelect" class="form-select">
-                                <option value="debate" data-i18n="debate">Debate</option>
+                                <option value="debate"       data-i18n="debate">Debate</option>
                                 <option value="presentation" data-i18n="presentation">Presentation</option>
-                                <option value="extempore" data-i18n="extempore">Extempore</option>
+                                <option value="extempore"    data-i18n="extempore">Extempore</option>
                             </select>
                         </div>
-                        
-                        <!-- Language Selector -->
-                        <div class="nav-item">
-                            <select id="languageSelect" class="form-select">
-                                <option value="en" data-i18n="english">English</option>
-                                <option value="ne" data-i18n="nepali">Nepali</option>
-                            </select>
-                        </div>
-                        
+
                         <!-- Judge Scoring Link (judges only) -->
                         <div class="nav-item" id="judgeScoring" style="display: none;">
-                            <a href="/judge/scoring" class="nav-link">My Scoring</a>
+                            <a href="/{{ lang }}/judge/scoring" class="nav-link" data-i18n="score">My Scoring</a>
                         </div>
-                        
+
                         <!-- Winners Link -->
                         <div class="nav-item">
-                            <a href="/winners" class="nav-link" data-i18n="winners">Winners</a>
+                            <a href="/{{ lang }}/winners" class="nav-link" data-i18n="winners">Winners</a>
                         </div>
-                        
+
                         <!-- Admin Panel Link (admin only) -->
                         <div class="nav-item" data-admin-only style="display: none;">
-                            <a href="/admin/dashboard" class="nav-link" data-i18n="adminPanel">Admin Panel</a>
+                            <a href="/{{ lang }}/admin/dashboard" class="nav-link" data-i18n="adminPanel">Admin Panel</a>
                         </div>
-                        
+
                         <!-- Logout Button -->
                         <div class="nav-item">
                             <button id="logoutBtn" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
@@ -55,7 +47,7 @@
                 </div>
             </div>
         </header>
-        
+
         <!-- Main Content -->
         <main class="content-wrapper">
             <div class="container">
@@ -65,54 +57,39 @@
             </div>
         </main>
     </div>
-    
+
+    <!-- Language is locked to whichever side the user came from -->
+    <script>
+        window.APP_LANG = '{{ lang }}';
+        localStorage.setItem('language', '{{ lang }}');
+    </script>
     <script src="/static/js/i18n.js"></script>
     <script src="/static/js/auth.js"></script>
     <script src="/static/js/main.js"></script>
     <script>
-        // Language selector handler
         document.addEventListener('DOMContentLoaded', () => {
-            const langSelect = document.getElementById('languageSelect');
-            langSelect.value = i18n.getLanguage();
-            
-            langSelect.addEventListener('change', (e) => {
-                i18n.setLanguage(e.target.value);
-                // Reload page content
-                window.location.reload();
-            });
-            
-            // Check if user has judge permissions
+            // lock i18n to server-provided language - no switcher
+            i18n.setLanguage(window.APP_LANG);
+            i18n.updatePageTexts();
+
+            // check judge permissions
             checkJudgePermissions();
         });
-        
+
         async function checkJudgePermissions() {
             try {
                 const token = auth.getToken();
-                if (!token) {
-                    console.log('No token found, user not logged in');
-                    return;
-                }
-                
+                if (!token) return;
+
                 const response = await fetch('/judge/api/my-assignments', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
-                console.log('Judge assignments response status:', response.status);
-                
+
                 if (response.ok) {
                     const data = await response.json();
-                    console.log('Judge assignments data:', data);
                     if (data.assignments && data.assignments.length > 0) {
-                        // User has judge permissions, show the link
-                        console.log('User has judge permissions, showing link');
                         document.getElementById('judgeScoring').style.display = 'block';
-                    } else {
-                        console.log('User has no active judge assignments');
                     }
-                } else {
-                    console.log('Failed to fetch judge assignments:', response.statusText);
                 }
             } catch (error) {
                 console.log('Error checking judge permissions:', error);

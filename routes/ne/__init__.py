@@ -1,0 +1,1 @@
+# Nepali language page blueprints

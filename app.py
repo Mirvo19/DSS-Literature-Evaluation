@@ -7,7 +7,7 @@ app = Flask(__name__)
 app.config.from_object(Config)
 CORS(app)
 
-# routes
+# api routes
 from routes import auth, events, admin, judge
 
 app.register_blueprint(auth.bp)
@@ -15,6 +15,13 @@ app.register_blueprint(events.bp)
 app.register_blueprint(events.api_bp)
 app.register_blueprint(admin.bp)
 app.register_blueprint(judge.bp)
+
+# page routes — english (/en/...) and nepali (/ne/...)
+from routes.en import pages as en_pages
+from routes.ne import pages as ne_pages
+
+app.register_blueprint(en_pages.bp)
+app.register_blueprint(ne_pages.bp)
 
 @app.route('/')
 def index():

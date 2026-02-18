@@ -10,11 +10,11 @@
     <div class="auth-container">
         <div class="auth-card">
             <h1 class="auth-title" data-i18n="login">Login</h1>
-            
+
             <div id="errorMessage" class="alert alert-error hidden"></div>
-            
+
             <form id="loginForm">
-                <!-- Language Selector -->
+                <!-- language -->
                 <div class="form-group">
                     <label for="languageSelect" class="form-label" data-i18n="selectLanguage">Select Language</label>
                     <select id="languageSelect" class="form-select" required>
@@ -22,6 +22,141 @@
                         <option value="ne" data-i18n="nepali">Nepali</option>
                     </select>
                 </div>
+
+                <!-- event -->
+                <div class="form-group">
+                    <label for="eventSelect" class="form-label" data-i18n="selectEvent">Select Event</label>
+                    <select id="eventSelect" class="form-select" required>
+                        <option value="debate" data-i18n="debate">Debate</option>
+                        <option value="presentation" data-i18n="presentation">Presentation</option>
+                        <option value="extempore" data-i18n="extempore">Extempore</option>
+                    </select>
+                </div>
+
+                <!-- grade (extempore only) -->
+                <div id="gradeGroup" class="form-group hidden">
+                    <label for="gradeSelect" class="form-label" data-i18n="selectGrade">Select Grade</label>
+                    <select id="gradeSelect" class="form-select">
+                        <option value="11" data-i18n="grade11">Grade 11</option>
+                        <option value="12" data-i18n="grade12">Grade 12</option>
+                    </select>
+                </div>
+
+                <!-- email -->
+                <div class="form-group">
+                    <label for="email" class="form-label" data-i18n="email">Email</label>
+                    <input type="email" id="email" class="form-input" data-i18n-placeholder="email" required>
+                </div>
+
+                <!-- password -->
+                <div class="form-group">
+                    <label for="password" class="form-label" data-i18n="password">Password</label>
+                    <input type="password" id="password" class="form-input" data-i18n-placeholder="password" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;" data-i18n="loginButton">
+                    Login
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p>
+                    <span data-i18n="dontHaveAccount">Don't have an account?</span>
+                    <a id="signupLink" href="/en/signup" data-i18n="signup">Sign Up</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // redirect if already logged in
+            if (auth.isAuthenticated()) {
+                const lang = localStorage.getItem('language') || 'en';
+                window.location.href = '/' + lang + '/dashboard';
+                return;
+            }
+
+            const langSelect   = document.getElementById('languageSelect');
+            const eventSelect  = document.getElementById('eventSelect');
+            const gradeGroup   = document.getElementById('gradeGroup');
+            const signupLink   = document.getElementById('signupLink');
+            const form         = document.getElementById('loginForm');
+            const errorMessage = document.getElementById('errorMessage');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+            // restore saved language
+            const savedLang = localStorage.getItem('language') || 'en';
+            langSelect.value = savedLang;
+            i18n.setLanguage(savedLang);
+            signupLink.href = '/' + savedLang + '/signup';
+
+            // restore saved event
+            const savedEvent = localStorage.getItem('selected_event');
+            if (savedEvent) {
+                eventSelect.value = savedEvent;
+                if (savedEvent === 'extempore') {
+                    gradeGroup.classList.remove('hidden');
+                    const savedGrade = localStorage.getItem('selected_grade');
+                    if (savedGrade) document.getElementById('gradeSelect').value = savedGrade;
+                }
+            }
+
+            // language change — update ui and signup link
+            langSelect.addEventListener('change', (e) => {
+                i18n.setLanguage(e.target.value);
+                localStorage.setItem('language', e.target.value);
+                signupLink.href = '/' + e.target.value + '/signup';
+            });
+
+            // show grade selector for extempore
+            eventSelect.addEventListener('change', (e) => {
+                gradeGroup.classList.toggle('hidden', e.target.value !== 'extempore');
+            });
+
+            // submit
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                errorMessage.classList.add('hidden');
+
+                const email    = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const event    = eventSelect.value;
+                const grade    = document.getElementById('gradeSelect').value;
+                const lang     = langSelect.value;
+
+                // save preferences
+                localStorage.setItem('selected_event', event);
+                localStorage.setItem('language', lang);
+                if (event === 'extempore') localStorage.setItem('selected_grade', grade);
+
+                loadingOverlay.classList.remove('hidden');
+
+                try {
+                    const result = await auth.login(email, password);
+                    // route to the correct language side
+                    window.location.href = result.is_admin
+                        ? '/' + lang + '/admin/dashboard'
+                        : '/' + lang + '/dashboard';
+                } catch (error) {
+                    errorMessage.textContent = error.message;
+                    errorMessage.classList.remove('hidden');
+                    loadingOverlay.classList.add('hidden');
+                }
+            });
+
+            i18n.updatePageTexts();
+        });
+    </script>
+</body>
+</html>
+
                 
                 <!-- Event Selector -->
                 <div class="form-group">

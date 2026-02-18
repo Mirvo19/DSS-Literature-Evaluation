@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSS Talk</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        /* landing page - full screen language picker */
+        .landing-wrapper {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-color, #f8f9fa);
+        }
+
+        .landing-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .landing-subtitle {
+            font-size: 1rem;
+            color: #6c757d;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .language-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 480px;
+        }
+
+        .lang-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5rem 2rem;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            background: #fff;
+            text-decoration: none;
+            color: inherit;
+            transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+            cursor: pointer;
+        }
+
+        .lang-card:hover {
+            border-color: var(--primary-color, #4f46e5);
+            box-shadow: 0 4px 20px rgba(79, 70, 229, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .lang-card .lang-label {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+        }
+
+        .lang-card .lang-sub {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .lang-card.english .lang-label { color: #1d4ed8; }
+        .lang-card.nepali  .lang-label { color: #b91c1c; }
+    </style>
+</head>
+<body>
+    <div class="landing-wrapper">
+        <h1 class="landing-title">DSS Talk</h1>
+        <p class="landing-subtitle">Choose your language &nbsp;/&nbsp; आफ्नो भाषा छान्नुहोस्</p>
+
+        <div class="language-grid">
+            <!-- English side -->
+            <a href="/en/login" class="lang-card english" id="enCard">
+                <span class="lang-label">English</span>
+                <span class="lang-sub">Continue in English</span>
+            </a>
+
+            <!-- Nepali side -->
+            <a href="/ne/login" class="lang-card nepali" id="neCard">
+                <span class="lang-label">नेपाली</span>
+                <span class="lang-sub">नेपालीमा जारी राख्नुहोस्</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // If the user was already logged in on a side, send them straight there
+        const token = localStorage.getItem('access_token');
+        const lang  = localStorage.getItem('language');
+
+        if (token && (lang === 'en' || lang === 'ne')) {
+            window.location.replace('/' + lang + '/dashboard');
+        }
+    </script>
+</body>
+</html>

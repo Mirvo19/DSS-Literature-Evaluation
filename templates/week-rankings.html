@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ lang }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Week Rankings - DSS Talk</title>
+    <title>{% if lang == 'ne' %}हप्ताको रैंकिङ - DSS Talk{% else %}Week Rankings - DSS Talk{% endif %}</title>
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
@@ -12,24 +12,17 @@
         <header class="header">
             <div class="container">
                 <div class="header-content">
-                    <a href="/dashboard" class="logo">DSS Talk</a>
-                    
+                    <a href="/{{ lang }}/dashboard" class="logo">DSS Talk</a>
+
                     <nav class="nav-menu">
                         <div class="nav-item">
-                            <select id="languageSelect" class="form-select">
-                                <option value="en" data-i18n="english">English</option>
-                                <option value="ne" data-i18n="nepali">Nepali</option>
-                            </select>
+                            <a href="/{{ lang }}/dashboard" class="nav-link" data-i18n="dashboard">Dashboard</a>
                         </div>
-                        
+
                         <div class="nav-item">
-                            <a href="/dashboard" class="nav-link" data-i18n="dashboard">Dashboard</a>
+                            <a href="/{{ lang }}/winners" class="nav-link" data-i18n="winners">Winners</a>
                         </div>
-                        
-                        <div class="nav-item">
-                            <a href="/winners" class="nav-link">Winners</a>
-                        </div>
-                        
+
                         <div class="nav-item">
                             <button id="logoutBtn" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
                         </div>
@@ -37,12 +30,12 @@
                 </div>
             </div>
         </header>
-        
+
         <!-- Main Content -->
         <main class="content-wrapper">
             <div class="container">
                 <div class="mb-3">
-                    <a href="/winners" class="btn btn-secondary">← Back to Winners</a>
+                    <a href="/{{ lang }}/winners" class="btn btn-secondary">← <span data-i18n="back">Back</span></a>
                 </div>
                 
                 <div class="card">
@@ -65,6 +58,11 @@
         </main>
     </div>
     
+    <!-- Language locked to server-provided side -->
+    <script>
+        window.APP_LANG = '{{ lang }}';
+        localStorage.setItem('language', '{{ lang }}');
+    </script>
     <script src="/static/js/i18n.js"></script>
     <script src="/static/js/auth.js"></script>
     <script>
@@ -180,16 +178,15 @@
         
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
+            // lock language to server-provided side - no switcher
+            i18n.setLanguage(window.APP_LANG);
+            i18n.updatePageTexts();
+
             loadRankings();
-            
+
             document.getElementById('logoutBtn').addEventListener('click', async () => {
                 await auth.logout();
                 window.location.href = '/';
-            });
-            
-            // Language selector
-            document.getElementById('languageSelect').addEventListener('change', (e) => {
-                i18n.setLanguage(e.target.value);
             });
         });
     </script>

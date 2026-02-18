@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>साइन अप - DSS Talk (नेपाली)</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <!-- back to login -->
+            <a href="/ne/login" class="back-link" style="display:inline-block;margin-bottom:1rem;font-size:0.85rem;color:#6c757d;text-decoration:none;">
+                ← लगइनमा फर्कनुहोस्
+            </a>
+
+            <h1 class="auth-title">साइन अप</h1>
+
+            <div id="errorMessage"   class="alert alert-error   hidden"></div>
+            <div id="successMessage" class="alert alert-success hidden"></div>
+
+            <form id="signupForm">
+                <!-- Email -->
+                <div class="form-group">
+                    <label for="email" class="form-label">इमेल</label>
+                    <input type="email" id="email" class="form-input" placeholder="इमेल" required>
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="password" class="form-label">पासवर्ड</label>
+                    <input type="password" id="password" class="form-input" placeholder="पासवर्ड" required minlength="6">
+                    <span class="form-help">पासवर्ड कम्तिमा ६ अक्षर हुनुपर्छ</span>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="form-group">
+                    <label for="confirmPassword" class="form-label">पासवर्ड पुष्टि गर्नुहोस्</label>
+                    <input type="password" id="confirmPassword" class="form-input" placeholder="पासवर्ड पुष्टि गर्नुहोस्" required minlength="6">
+                    <span id="passwordError" class="form-error hidden">पासवर्डहरू मेल खाँदैनन्</span>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="btn btn-primary" style="width: 100%;">साइन अप गर्नुहोस्</button>
+            </form>
+
+            <div class="auth-footer">
+                <p>पहिले नै खाता छ? <a href="/ne/login">लगइन गर्नुहोस्</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Language locked to Nepali -->
+    <script>
+        window.APP_LANG = 'ne';
+        localStorage.setItem('language', 'ne');
+    </script>
+    <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            i18n.setLanguage('ne');
+
+            const password        = document.getElementById('password');
+            const confirmPassword = document.getElementById('confirmPassword');
+            const passwordError   = document.getElementById('passwordError');
+            const form            = document.getElementById('signupForm');
+            const errorMessage    = document.getElementById('errorMessage');
+            const successMessage  = document.getElementById('successMessage');
+            const loadingOverlay  = document.getElementById('loadingOverlay');
+
+            // if already logged in, redirect to Nepali dashboard
+            if (auth.isAuthenticated()) {
+                window.location.href = '/ne/dashboard';
+                return;
+            }
+
+            function validatePasswords() {
+                if (password.value && confirmPassword.value) {
+                    if (password.value !== confirmPassword.value) {
+                        passwordError.classList.remove('hidden');
+                        return false;
+                    }
+                    passwordError.classList.add('hidden');
+                }
+                return true;
+            }
+
+            password.addEventListener('input', validatePasswords);
+            confirmPassword.addEventListener('input', validatePasswords);
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                errorMessage.classList.add('hidden');
+                successMessage.classList.add('hidden');
+
+                if (!validatePasswords()) {
+                    errorMessage.textContent = 'पासवर्डहरू मेल खाँदैनन्';
+                    errorMessage.classList.remove('hidden');
+                    return;
+                }
+
+                loadingOverlay.classList.remove('hidden');
+
+                try {
+                    await auth.signup(
+                        document.getElementById('email').value,
+                        password.value
+                    );
+
+                    successMessage.textContent = 'खाता सफलतापूर्वक सिर्जना भयो! लगइनमा पुनः निर्देशित गर्दै...';
+                    successMessage.classList.remove('hidden');
+
+                    setTimeout(() => {
+                        window.location.href = '/ne/login';
+                    }, 2000);
+                } catch (error) {
+                    errorMessage.textContent = error.message;
+                    errorMessage.classList.remove('hidden');
+                    loadingOverlay.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

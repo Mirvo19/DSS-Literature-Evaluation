@@ -96,7 +96,6 @@ class ExtemporeRandomSelector:
         selected_students: List[Dict],
         minimum_required: int = 1
     ) -> Tuple[bool, Optional[str]]:
-        # code
         if len(selected_students) < minimum_required:
             return False, f"Need at least {minimum_required} participant(s)"
         
@@ -112,7 +111,6 @@ class ExtemporeRandomSelector:
         week_id: str,
         selected_students: List[Dict]
     ) -> List[Dict]:
-        # code
         participants = []
         for student in selected_students:
             participants.append({

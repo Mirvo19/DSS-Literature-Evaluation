@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>लगइन - DSS Talk (नेपाली)</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <!-- back to landing -->
+            <a href="/" class="back-link" style="display:inline-block;margin-bottom:1rem;font-size:0.85rem;color:#6c757d;text-decoration:none;">
+                ← भाषा छनौटमा फर्कनुहोस्
+            </a>
+
+            <h1 class="auth-title">लगइन</h1>
+
+            <div id="errorMessage" class="alert alert-error hidden"></div>
+
+            <form id="loginForm">
+                <!-- Event Selector -->
+                <div class="form-group">
+                    <label for="eventSelect" class="form-label">कार्यक्रम चयन गर्नुहोस्</label>
+                    <select id="eventSelect" class="form-select" required>
+                        <option value="debate">बहस</option>
+                        <option value="presentation">प्रस्तुतीकरण</option>
+                        <option value="extempore">तत्काल भाषण</option>
+                    </select>
+                </div>
+
+                <!-- Grade Selector (for Extempore only) -->
+                <div id="gradeGroup" class="form-group hidden">
+                    <label for="gradeSelect" class="form-label">कक्षा चयन गर्नुहोस्</label>
+                    <select id="gradeSelect" class="form-select">
+                        <option value="11">कक्षा ११</option>
+                        <option value="12">कक्षा १२</option>
+                    </select>
+                </div>
+
+                <!-- Email -->
+                <div class="form-group">
+                    <label for="email" class="form-label">इमेल</label>
+                    <input type="email" id="email" class="form-input" placeholder="इमेल" required>
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="password" class="form-label">पासवर्ड</label>
+                    <input type="password" id="password" class="form-input" placeholder="पासवर्ड" required>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="btn btn-primary" style="width: 100%;">लगइन गर्नुहोस्</button>
+            </form>
+
+            <div class="auth-footer">
+                <p>
+                    खाता छैन?
+                    <a href="/ne/signup">साइन अप गर्नुहोस्</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Language is locked to Nepali on this side -->
+    <script>
+        window.APP_LANG = 'ne';
+        localStorage.setItem('language', 'ne');
+    </script>
+    <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // lock language to Nepali
+            i18n.setLanguage('ne');
+
+            const eventSelect    = document.getElementById('eventSelect');
+            const gradeGroup     = document.getElementById('gradeGroup');
+            const form           = document.getElementById('loginForm');
+            const errorMessage   = document.getElementById('errorMessage');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+            // restore saved event selection
+            const savedEvent = localStorage.getItem('selected_event');
+            if (savedEvent) {
+                eventSelect.value = savedEvent;
+                if (savedEvent === 'extempore') {
+                    gradeGroup.classList.remove('hidden');
+                    const savedGrade = localStorage.getItem('selected_grade');
+                    if (savedGrade) document.getElementById('gradeSelect').value = savedGrade;
+                }
+            }
+
+            // show/hide grade selector
+            eventSelect.addEventListener('change', (e) => {
+                if (e.target.value === 'extempore') {
+                    gradeGroup.classList.remove('hidden');
+                } else {
+                    gradeGroup.classList.add('hidden');
+                }
+            });
+
+            // form submission
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                errorMessage.classList.add('hidden');
+
+                const email    = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const event    = eventSelect.value;
+                const grade    = document.getElementById('gradeSelect').value;
+
+                // save preferences
+                localStorage.setItem('selected_event', event);
+                if (event === 'extempore') localStorage.setItem('selected_grade', grade);
+
+                loadingOverlay.classList.remove('hidden');
+
+                try {
+                    const result = await auth.login(email, password);
+
+                    if (result.is_admin) {
+                        window.location.href = '/ne/admin/dashboard';
+                    } else {
+                        window.location.href = '/ne/dashboard';
+                    }
+                } catch (error) {
+                    errorMessage.textContent = error.message;
+                    errorMessage.classList.remove('hidden');
+                } finally {
+                    loadingOverlay.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ lang }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Winners - DSS Talk</title>
+    <title>{% if lang == 'ne' %}विजेताहरू - DSS Talk{% else %}Winners - DSS Talk{% endif %}</title>
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
@@ -12,33 +12,26 @@
         <header class="header">
             <div class="container">
                 <div class="header-content">
-                    <a href="/dashboard" class="logo">DSS Talk</a>
-                    
+                    <a href="/{{ lang }}/dashboard" class="logo">DSS Talk</a>
+
                     <nav class="nav-menu">
                         <div class="nav-item">
                             <select id="eventSelect" class="form-select">
-                                <option value="" data-i18n="all">All</option>
-                                <option value="debate" data-i18n="debate">Debate</option>
+                                <option value=""          data-i18n="all">All</option>
+                                <option value="debate"       data-i18n="debate">Debate</option>
                                 <option value="presentation" data-i18n="presentation">Presentation</option>
-                                <option value="extempore" data-i18n="extempore">Extempore</option>
+                                <option value="extempore"    data-i18n="extempore">Extempore</option>
                             </select>
                         </div>
-                        
+
                         <div class="nav-item">
-                            <select id="languageSelect" class="form-select">
-                                <option value="en" data-i18n="english">English</option>
-                                <option value="ne" data-i18n="nepali">Nepali</option>
-                            </select>
+                            <a href="/{{ lang }}/dashboard" class="nav-link" data-i18n="dashboard">Dashboard</a>
                         </div>
-                        
-                        <div class="nav-item">
-                            <a href="/dashboard" class="nav-link" data-i18n="dashboard">Dashboard</a>
-                        </div>
-                        
+
                         <div class="nav-item" data-admin-only style="display: none;">
-                            <a href="/admin/dashboard" class="nav-link" data-i18n="adminPanel">Admin Panel</a>
+                            <a href="/{{ lang }}/admin/dashboard" class="nav-link" data-i18n="adminPanel">Admin Panel</a>
                         </div>
-                        
+
                         <div class="nav-item">
                             <button id="logoutBtn" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
                         </div>
@@ -62,6 +55,11 @@
         </main>
     </div>
     
+    <!-- Language locked to server-provided side -->
+    <script>
+        window.APP_LANG = '{{ lang }}';
+        localStorage.setItem('language', '{{ lang }}');
+    </script>
     <script src="/static/js/i18n.js"></script>
     <script src="/static/js/auth.js"></script>
     <script>
@@ -142,8 +140,8 @@
                                         <td>${topic}</td>
                                         <td>${date ? new Date(date).toLocaleDateString() : '-'}</td>
                                         <td>
-                                            <a href="/week-rankings/${w.id}" class="btn btn-sm btn-primary">
-                                                View Rankings
+                                            <a href="/${window.APP_LANG}/week-rankings/${w.id}" class="btn btn-sm btn-primary">
+                                                ${i18n.t('details')}
                                             </a>
                                         </td>
                                     </tr>
@@ -183,22 +181,17 @@
         
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
-            const langSelect = document.getElementById('languageSelect');
-            langSelect.value = i18n.getLanguage();
-            
-            langSelect.addEventListener('change', (e) => {
-                i18n.setLanguage(e.target.value);
-                window.location.reload();
-            });
-            
+            // lock language to server-provided side - no switcher
+            i18n.setLanguage(window.APP_LANG);
+            i18n.updatePageTexts();
+
             const logoutBtn = document.getElementById('logoutBtn');
             logoutBtn.addEventListener('click', async () => {
                 await auth.logout();
                 window.location.href = '/';
             });
-            
+
             await initialize();
-            i18n.updatePageTexts();
         });
     </script>
 </body>

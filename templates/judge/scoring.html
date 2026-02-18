@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ lang }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Judge Scoring - DSS Talk</title>
+    <title>{% if lang == 'ne' %}निर्णायक स्कोरिङ - DSS Talk{% else %}Judge Scoring - DSS Talk{% endif %}</title>
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
@@ -11,17 +11,17 @@
         <header class="header">
             <div class="container">
                 <div class="header-content">
-                    <a href="/dashboard" class="logo">DSS Talk</a>
+                    <a href="/{{ lang }}/dashboard" class="logo">DSS Talk</a>
                     <nav class="nav-menu">
                         <!-- Navigation Links -->
                         <div class="nav-item">
-                            <a href="/dashboard" class="nav-link">Dashboard</a>
+                            <a href="/{{ lang }}/dashboard" class="nav-link" data-i18n="dashboard">Dashboard</a>
                         </div>
                         <div class="nav-item">
-                            <a href="/judge/scoring" class="nav-link" style="font-weight: bold;">My Scoring</a>
+                            <a href="/{{ lang }}/judge/scoring" class="nav-link" style="font-weight: bold;" data-i18n="myScoring">My Scoring</a>
                         </div>
                         <div class="nav-item">
-                            <a href="/winners" class="nav-link">Winners</a>
+                            <a href="/{{ lang }}/winners" class="nav-link" data-i18n="winners">Winners</a>
                         </div>
                         
                         <!-- User Info -->
@@ -104,6 +104,11 @@
         <div class="spinner"></div>
     </div>
     
+    <!-- Language locked to server-provided side -->
+    <script>
+        window.APP_LANG = '{{ lang }}';
+        localStorage.setItem('language', '{{ lang }}');
+    </script>
     <script src="/static/js/i18n.js"></script>
     <script src="/static/js/auth.js"></script>
     <script src="/static/js/admin.js"></script>

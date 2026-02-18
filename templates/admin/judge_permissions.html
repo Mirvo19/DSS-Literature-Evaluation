@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ lang }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Judge Permissions - DSS Talk Admin</title>
+    <title>{% if lang == 'ne' %}निर्णायक अनुमति - DSS Talk{% else %}Manage Judge Permissions - DSS Talk Admin{% endif %}</title>
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
@@ -11,13 +11,13 @@
         <header class="header">
             <div class="container">
                 <div class="header-content">
-                    <a href="/admin/dashboard" class="logo">DSS Talk Admin</a>
+                    <a href="/{{ lang }}/admin/dashboard" class="logo">DSS Talk Admin</a>
                     <nav class="nav-menu">
                         <div class="nav-item">
-                            <a href="/admin/dashboard" class="nav-link" data-i18n="back">Back</a>
+                            <a href="/{{ lang }}/admin/dashboard" class="nav-link" data-i18n="back">Back</a>
                         </div>
                         <div class="nav-item">
-                            <a href="/admin/logs" class="nav-link">Admin Logs</a>
+                            <a href="/{{ lang }}/admin/logs" class="nav-link">Admin Logs</a>
                         </div>
                         <div class="nav-item">
                             <button id="logoutBtn" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
@@ -86,6 +86,11 @@
         <div class="spinner"></div>
     </div>
     
+    <!-- Language locked to server-provided side -->
+    <script>
+        window.APP_LANG = '{{ lang }}';
+        localStorage.setItem('language', '{{ lang }}');
+    </script>
     <script src="/static/js/i18n.js"></script>
     <script src="/static/js/auth.js"></script>
     <script src="/static/js/admin.js"></script>
