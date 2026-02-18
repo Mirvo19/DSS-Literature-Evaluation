@@ -1,11 +1,11 @@
-// code
+// auth class
 
 class Auth {
     constructor() {
         this.token = localStorage.getItem('access_token');
         this.user = JSON.parse(localStorage.getItem('user') || 'null');
-        this.isAdmin = false; //  verify from server
-        localStorage.removeItem('is_admin'); // Clear  value from old sessions of devlopment
+        this.isAdmin = false; // always verify from server
+        localStorage.removeItem('is_admin'); // clear any stale value
     }
     
     async signup(email, password) {
@@ -24,7 +24,7 @@ class Auth {
                 throw new Error(data.error || 'Signup failed');
             }
             
-            // code
+            // save session if one was returned
             if (data.session && data.session.access_token) {
                 this.setSession(data.session.access_token, data.user, false);
             }
@@ -51,7 +51,7 @@ class Auth {
                 throw new Error(data.error || 'Login failed');
             }
             
-            // code
+            // save session
             this.setSession(data.session.access_token, data.user, data.is_admin);
             
             return data;
@@ -96,7 +96,7 @@ class Auth {
             
             const data = await response.json();
             this.user = data.user;
-            this.isAdmin = data.is_admin; // Set from server only, never persisted
+            this.isAdmin = data.is_admin; // from server only, never stored locally
             localStorage.setItem('user', JSON.stringify(data.user));
             
             return true;
@@ -113,7 +113,7 @@ class Auth {
         
         localStorage.setItem('access_token', token);
         localStorage.setItem('user', JSON.stringify(user));
-        // is_admin is intentionally NOT stored in localStorage
+        // is_admin stays in memory only
     }
     
     clearSession() {
@@ -151,10 +151,10 @@ class Auth {
     }
 }
 
-// code
+// global auth instance
 const auth = new Auth();
 
-// code
+// redirects to login if not authenticated
 async function requireAuth() {
     if (!auth.isAuthenticated()) {
         window.location.href = '/';
@@ -170,7 +170,7 @@ async function requireAuth() {
     return true;
 }
 
-// code
+// redirects away if not an admin
 async function requireAdmin() {
     const authenticated = await requireAuth();
     if (!authenticated) {
@@ -186,23 +186,23 @@ async function requireAdmin() {
     return true;
 }
 
-// code
+// show/hide elements based on auth state
 function updateUIForAuth() {
     const isAuth = auth.isAuthenticated();
     const isAdmin = auth.checkAdmin();
     
-    // code
+    // hide admin-only elements for non-admins
     document.querySelectorAll('[data-admin-only]').forEach(el => {
         el.style.display = isAdmin ? '' : 'none';
     });
     
-    // code
+    // hide auth-required elements when logged out
     document.querySelectorAll('[data-auth-required]').forEach(el => {
         el.style.display = isAuth ? '' : 'none';
     });
 }
 
-// code
+// export for testing
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { auth, requireAuth, requireAdmin, updateUIForAuth };
 }

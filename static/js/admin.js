@@ -1,4 +1,4 @@
-// code
+// admin panel
 
 class AdminPanel {
     constructor() {
@@ -10,13 +10,13 @@ class AdminPanel {
     }
     
     async initialize() {
-        // code
+        // verify admin access
         const isAdmin = await requireAdmin();
         if (!isAdmin) return;
         
         updateUIForAuth();
         
-        // code
+        // load initial data
         await this.loadEvents();
     }
     
@@ -30,7 +30,7 @@ class AdminPanel {
         }
     }
     
-    // code
+    // students
     
     async loadStudents() {
         try {
@@ -119,7 +119,7 @@ class AdminPanel {
         }
     }
     
-    // code
+    // sessions
     
     async loadSessions() {
         try {
@@ -206,7 +206,7 @@ class AdminPanel {
         }
     }
     
-    // code
+    // weeks
     
     async loadWeeks() {
         try {
@@ -276,7 +276,7 @@ class AdminPanel {
         }
     }
     
-    // code
+    // participants
     
     async updateParticipant(participantId, participantData) {
         try {
@@ -330,7 +330,7 @@ class AdminPanel {
         }
     }
     
-    // code
+    // judges
     
     async loadJudges() {
         try {
@@ -367,7 +367,7 @@ class AdminPanel {
         }
     }
     
-    // code
+    // criteria
     
     async loadCriteria() {
         try {
@@ -387,10 +387,10 @@ class AdminPanel {
     }
 }
 
-// code
+// global instance
 const adminPanel = new AdminPanel();
 
-// code
+// modal helpers
 function showModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
@@ -435,7 +435,7 @@ function showAlert(message, type = 'success') {
     }, 3000);
 }
 
-// code
+// export for testing
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { adminPanel, showModal, hideModal, showLoading, hideLoading, showAlert };
 }

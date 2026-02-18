@@ -1,4 +1,4 @@
-// code
+// main app
 
 class App {
     constructor() {
@@ -9,18 +9,18 @@ class App {
     }
     
     async initialize() {
-        // code
+        // check auth
         const authenticated = await requireAuth();
         if (!authenticated) return;
         
-        // code
+        // load events
         await this.loadEvents();
         
-        // code
+        // set up header
         this.updateHeader();
         updateUIForAuth();
         
-        // code
+        // load content
         await this.loadContent();
     }
     
@@ -30,7 +30,7 @@ class App {
             const data = await response.json();
             this.events = data.events;
             
-            // code
+            // find the current event
             const currentEvent = this.events.find(e => 
                 e.name.toLowerCase() === this.selectedEvent.toLowerCase()
             );
@@ -52,13 +52,13 @@ class App {
                 this.selectedEvent = e.target.value;
                 localStorage.setItem('selected_event', this.selectedEvent);
                 
-                // code
+                // reload on change
                 await this.loadEvents();
                 await this.loadContent();
             });
         }
         
-        // code
+        // wire up logout
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', async () => {
@@ -72,7 +72,7 @@ class App {
         const contentArea = document.getElementById('contentArea');
         if (!contentArea) return;
         
-        // code
+        // show loading
         contentArea.innerHTML = '<div class="spinner"></div>';
         
         if (this.selectedEvent === 'extempore') {
@@ -208,7 +208,7 @@ class App {
     }
 }
 
-// code
+// boot the app
 if (typeof document !== 'undefined') {
     document.addEventListener('DOMContentLoaded', async () => {
         const app = new App();

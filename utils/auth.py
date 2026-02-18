@@ -33,7 +33,7 @@ def require_auth(f):
         if not user:
             return jsonify({'error': 'Invalid or expired token'}), 401
         
-        # Attach user to request
+        # attach user to request
         request.user = user
         return f(*args, **kwargs)
     
@@ -42,21 +42,21 @@ def require_auth(f):
 def require_admin(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # Try Authorization header first
+        # try auth header first
         token = request.headers.get('Authorization')
         
         if token and token.startswith('Bearer '):
             token = token[7:]
         elif not token:
-            # Try to get from cookie as fallback
+            # fall back to cookie
             token = request.cookies.get('access_token')
         
-        # Check if this is an HTML page request
+        # check if it's a page request
         is_html_request = 'text/html' in request.headers.get('Accept', '')
         
         if not token:
             if is_html_request:
-                # Redirect to login for HTML requests without token
+                # no token, redirect to login
                 return redirect('/')
             return jsonify({'error': 'No authorization token provided'}), 401
         
@@ -73,7 +73,7 @@ def require_admin(f):
             
             if not result.data or len(result.data) == 0:
                 if is_html_request:
-                    # Not an admin - redirect to regular dashboard
+                    # not admin, back to dashboard
                     return redirect('/dashboard')
                 return jsonify({'error': 'Unauthorized. Admin access required.'}), 403
             
@@ -90,7 +90,7 @@ def require_admin(f):
     return decorated_function
 
 def is_user_admin(user_id):
-    # code
+    # check the admins table
     try:
         result = supabase_admin.table('admins').select('*').eq('user_id', user_id).execute()
         return result.data and len(result.data) > 0

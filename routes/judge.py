@@ -5,26 +5,26 @@ from functools import wraps
 
 bp = Blueprint('judge', __name__, url_prefix='/judge')
 
-# init supabase with service key
+# init supabase
 supabase = create_client(Config.SUPABASE_URL, Config.SUPABASE_SERVICE_KEY)
 
 def require_judge(f):
-    """Decorator to require judge authentication"""
+    # decorator to require judge auth
     @wraps(f)
     def decorated_function(*args, **kwargs):
         try:
-            # Get the authorization token
+            # get the token
             auth_header = request.headers.get('Authorization', '')
             if not auth_header.startswith('Bearer '):
                 return jsonify({'error': 'No authorization token'}), 401
             
             token = auth_header[7:]
-            # Verify the token with Supabase
+            # verify the token
             user = supabase.auth.get_user(token)
             if not user or not user.user:
                 return jsonify({'error': 'Invalid token'}), 401
             
-            # Store user info in request context
+            # attach user to request
             request.current_user = user.user
             return f(*args, **kwargs)
         except Exception as e:
@@ -32,7 +32,7 @@ def require_judge(f):
     return decorated_function
 
 def get_judge_email_from_request():
-    """Extract judge email from the current request"""
+    # get judge email from request
     try:
         auth_header = request.headers.get('Authorization', '')
         if auth_header.startswith('Bearer '):
@@ -45,22 +45,18 @@ def get_judge_email_from_request():
         print(f"Error getting judge email: {e}")
         return None, None
 
-# ============================================
-# JUDGE PAGES
-# ============================================
+# judge pages
 
 @bp.route('/scoring')
 def judge_scoring_page():
-    """Judge scoring page"""
+    # scoring page
     return render_template('judge/scoring.html')
 
-# ============================================
-# JUDGE API ENDPOINTS
-# ============================================
+# judge api
 
 @bp.route('/api/my-assignments', methods=['GET'])
 def get_my_assignments():
-    """Get all active judge assignments for the current user"""
+    # get active assignments for the current user
     try:
         judge_email, judge_id = get_judge_email_from_request()
         print(f"Judge email check: {judge_email}")
@@ -69,7 +65,7 @@ def get_my_assignments():
             print("No judge email found, returning empty assignments")
             return jsonify({'assignments': []}), 200
         
-        # Get active permissions with week and session details
+        # get active permissions
         response = supabase.table('judge_permissions')\
             .select('*, weeks(id, week_number, topic, session_id, sessions(events(name)))')\
             .eq('user_email', judge_email)\
@@ -92,13 +88,13 @@ def get_my_assignments():
 @bp.route('/api/week/<week_id>/participants', methods=['GET'])
 @require_judge
 def get_week_participants(week_id):
-    """Get all participants for a week that the judge can score"""
+    # get participants the judge can score
     try:
         judge_email, judge_id = get_judge_email_from_request()
         if not judge_email:
             return jsonify({'error': 'Could not identify judge'}), 401
         
-        # Verify judge has permission for this week
+        # verify permission
         permission = supabase.table('judge_permissions')\
             .select('*')\
             .eq('user_email', judge_email)\
@@ -111,13 +107,13 @@ def get_week_participants(week_id):
         
         judge_type = permission.data[0]['judge_type']
         
-        # Get all participants for this week
+        # get all participants
         participants_response = supabase.table('participants')\
             .select('*, students(name, roll_number)')\
             .eq('week_id', week_id)\
             .execute()
         
-        # Get existing scores by this judge for these participants
+        # get existing scores
         participant_ids = [p['id'] for p in participants_response.data]
         scores_response = supabase.table('judge_scores')\
             .select('*')\
@@ -126,7 +122,7 @@ def get_week_participants(week_id):
             .in_('participant_id', participant_ids)\
             .execute()
         
-        # Mark participants as scored or pending
+        # mark scored status
         scored_participant_ids = {s['participant_id'] for s in scores_response.data}
         for participant in participants_response.data:
             participant['scored'] = participant['id'] in scored_participant_ids
@@ -141,7 +137,7 @@ def get_week_participants(week_id):
 @bp.route('/api/criteria', methods=['GET'])
 @require_judge
 def get_judging_criteria():
-    """Get all judging criteria, optionally filtered by judge type"""
+    # get judging criteria
     try:
         judge_type = request.args.get('judge_type')
         
@@ -159,7 +155,7 @@ def get_judging_criteria():
 @bp.route('/api/submit-score', methods=['POST'])
 @require_judge
 def submit_score():
-    """Submit or update a score for a participant"""
+    # submit or update a score
     try:
         data = request.json
         judge_email, judge_id = get_judge_email_from_request()
@@ -170,7 +166,7 @@ def submit_score():
         if not data.get('participant_id') or not data.get('judge_type'):
             return jsonify({'error': 'Participant ID and judge type are required'}), 400
         
-        # Verify judge has permission for this participant's week
+        # verify judge has permission
         participant = supabase.table('participants')\
             .select('week_id')\
             .eq('id', data['participant_id'])\
@@ -191,7 +187,7 @@ def submit_score():
         if not permission.data:
             return jsonify({'error': 'No permission to score this participant'}), 403
         
-        # Check if score already exists
+        # check if already scored
         existing_score = supabase.table('judge_scores')\
             .select('*')\
             .eq('participant_id', data['participant_id'])\
@@ -210,13 +206,13 @@ def submit_score():
         }
         
         if existing_score.data:
-            # Update existing score
+            # update existing
             response = supabase.table('judge_scores')\
                 .update(score_data)\
                 .eq('id', existing_score.data[0]['id'])\
                 .execute()
         else:
-            # Insert new score
+            # insert new
             response = supabase.table('judge_scores')\
                 .insert(score_data)\
                 .execute()
@@ -230,7 +226,7 @@ def submit_score():
 
 @bp.route('/api/my-scores', methods=['GET'])
 def get_my_scores():
-    """Get all scores submitted by the current judge"""
+    # get all scores by current judge
     try:
         judge_email, judge_id = get_judge_email_from_request()
         if not judge_email:
@@ -243,7 +239,7 @@ def get_my_scores():
         
         print(f"Found {len(response.data)} scores for judge {judge_email}")
         
-        # Enrich scores with participant and student data
+        # enrich with details
         for score in response.data:
             try:
                 participant = supabase.table('participants')\
@@ -253,14 +249,14 @@ def get_my_scores():
                     .execute()
                 
                 if participant.data:
-                    # Get student info
+                    # get student info
                     student = supabase.table('students')\
                         .select('*')\
                         .eq('id', participant.data['student_id'])\
                         .single()\
                         .execute()
                     
-                    # Get week info
+                    # get week info
                     week = supabase.table('weeks')\
                         .select('week_number, topic')\
                         .eq('id', participant.data['week_id'])\

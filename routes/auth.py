@@ -41,7 +41,7 @@ def signup():
             
             resp = make_response(jsonify(resp_data), 201)
             
-            # Set cookie if session exists
+            # set cookie if we got a session
             if response.session and response.session.access_token:
                 resp.set_cookie(
                     'access_token',
@@ -83,7 +83,7 @@ def login():
             # check admin
             is_admin = is_user_admin(response.user.id)
             
-            # Create response with cookie
+            # build response with cookie
             resp = make_response(jsonify({
                 'message': 'Login successful',
                 'user': {
@@ -96,12 +96,12 @@ def login():
                 'is_admin': is_admin
             }), 200)
             
-            # Set httponly cookie for server-side auth
+            # set httponly cookie
             resp.set_cookie(
                 'access_token',
                 response.session.access_token,
                 httponly=True,
-                secure=True,  # Only send over HTTPS
+                secure=True,  # https only
                 samesite='Lax',
                 max_age=60*60*24*7  # 7 days
             )
@@ -118,7 +118,7 @@ def login():
 
 @bp.route('/logout', methods=['POST'])
 def logout():
-    # code
+    # sign out
     try:
         token = request.headers.get('Authorization')
         if token and token.startswith('Bearer '):
@@ -134,7 +134,7 @@ def logout():
 
 @bp.route('/verify', methods=['GET'])
 def verify_token():
-    # code
+    # verify and return user info
     try:
         token = request.headers.get('Authorization')
         
