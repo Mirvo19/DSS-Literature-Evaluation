@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import request, jsonify
+from flask import request, jsonify, redirect
 from supabase import create_client
 from config import Config
 import jwt
@@ -42,17 +42,29 @@ def require_auth(f):
 def require_admin(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        # Try Authorization header first
         token = request.headers.get('Authorization')
         
-        if not token:
-            return jsonify({'error': 'No authorization token provided'}), 401
-        
-        if token.startswith('Bearer '):
+        if token and token.startswith('Bearer '):
             token = token[7:]
+        elif not token:
+            # Try to get from cookie as fallback
+            token = request.cookies.get('access_token')
+        
+        # Check if this is an HTML page request
+        is_html_request = 'text/html' in request.headers.get('Accept', '')
+        
+        if not token:
+            if is_html_request:
+                # Redirect to login for HTML requests without token
+                return redirect('/')
+            return jsonify({'error': 'No authorization token provided'}), 401
         
         user = get_user_from_token(token)
         
         if not user:
+            if is_html_request:
+                return redirect('/')
             return jsonify({'error': 'Invalid or expired token'}), 401
         
         # check admin table
@@ -60,6 +72,9 @@ def require_admin(f):
             result = supabase_admin.table('admins').select('*').eq('user_id', user.id).execute()
             
             if not result.data or len(result.data) == 0:
+                if is_html_request:
+                    # Not an admin - redirect to regular dashboard
+                    return redirect('/dashboard')
                 return jsonify({'error': 'Unauthorized. Admin access required.'}), 403
             
             request.user = user
@@ -68,6 +83,8 @@ def require_admin(f):
             
         except Exception as e:
             print(f"Admin check error: {e}")
+            if is_html_request:
+                return redirect('/')
             return jsonify({'error': 'Authorization check failed'}), 500
     
     return decorated_function

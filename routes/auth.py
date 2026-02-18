@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, make_response
 from supabase import create_client
 from config import Config
 from utils.auth import is_user_admin
@@ -28,7 +28,7 @@ def signup():
         })
         
         if response.user:
-            return jsonify({
+            resp_data = {
                 'message': 'Signup successful',
                 'user': {
                     'id': response.user.id,
@@ -37,7 +37,22 @@ def signup():
                 'session': {
                     'access_token': response.session.access_token if response.session else None
                 }
-            }), 201
+            }
+            
+            resp = make_response(jsonify(resp_data), 201)
+            
+            # Set cookie if session exists
+            if response.session and response.session.access_token:
+                resp.set_cookie(
+                    'access_token',
+                    response.session.access_token,
+                    httponly=True,
+                    secure=True,
+                    samesite='Lax',
+                    max_age=60*60*24*7  # 7 days
+                )
+            
+            return resp
         else:
             return jsonify({'error': 'Signup failed'}), 400
             
@@ -68,7 +83,8 @@ def login():
             # check admin
             is_admin = is_user_admin(response.user.id)
             
-            return jsonify({
+            # Create response with cookie
+            resp = make_response(jsonify({
                 'message': 'Login successful',
                 'user': {
                     'id': response.user.id,
@@ -78,7 +94,19 @@ def login():
                     'access_token': response.session.access_token
                 },
                 'is_admin': is_admin
-            }), 200
+            }), 200)
+            
+            # Set httponly cookie for server-side auth
+            resp.set_cookie(
+                'access_token',
+                response.session.access_token,
+                httponly=True,
+                secure=True,  # Only send over HTTPS
+                samesite='Lax',
+                max_age=60*60*24*7  # 7 days
+            )
+            
+            return resp
         else:
             return jsonify({'error': 'Invalid credentials'}), 401
             
@@ -97,7 +125,10 @@ def logout():
             token = token[7:]
             supabase.auth.sign_out()
         
-        return jsonify({'message': 'Logout successful'}), 200
+        # Clear the cookie
+        resp = make_response(jsonify({'message': 'Logout successful'}), 200)
+        resp.set_cookie('access_token', '', expires=0, httponly=True, secure=True, samesite='Lax')
+        return resp
     except Exception as e:
         return jsonify({'error': f'Logout error: {str(e)}'}), 400
 

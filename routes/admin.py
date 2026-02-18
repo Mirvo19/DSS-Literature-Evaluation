@@ -15,30 +15,37 @@ supabase = create_client(Config.SUPABASE_URL, Config.SUPABASE_SERVICE_KEY)
 # pages
 
 @bp.route('/dashboard')
+@require_admin
 def admin_dashboard_page():
     return render_template('admin/dashboard.html')
 
 @bp.route('/students')
+@require_admin
 def admin_students_page():
     return render_template('admin/students.html')
 
 @bp.route('/sessions')
+@require_admin
 def admin_sessions_page():
     return render_template('admin/sessions.html')
 
 @bp.route('/weeks')
+@require_admin
 def admin_weeks_page():
     return render_template('admin/weeks.html')
 
 @bp.route('/logs')
+@require_admin
 def admin_logs_page():
     return render_template('admin/logs.html')
 
 @bp.route('/judge-permissions')
+@require_admin
 def admin_judge_permissions_page():
     return render_template('admin/judge_permissions.html')
 
 @bp.route('/results')
+@require_admin
 def admin_results_page():
     return render_template('admin/results.html')
 
@@ -113,9 +120,7 @@ def delete_student(student_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ============================================
 # CSV IMPORT
-# ============================================
 
 @bp.route('/api/import-csv', methods=['POST'])
 @require_admin
@@ -170,9 +175,7 @@ def import_students_csv():
     except Exception as e:
         return jsonify({'error': f'Import failed: {str(e)}'}), 500
 
-# ============================================
 # SESSION MANAGEMENT
-# ============================================
 
 @bp.route('/api/sessions', methods=['GET'])
 @require_admin
@@ -242,9 +245,7 @@ def delete_session(session_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ============================================
 # WEEK MANAGEMENT
-# ============================================
 
 @bp.route('/api/weeks', methods=['GET'])
 @require_admin
@@ -583,9 +584,7 @@ def add_random_participants_to_week(week_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ============================================
 # RESET SESSION SPEAKERS
-# ============================================
 
 @bp.route('/api/sessions/<session_id>/reset-speakers', methods=['POST'])
 @require_admin
@@ -597,9 +596,7 @@ def reset_session_speakers(session_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ============================================
 # PARTICIPANT MANAGEMENT
-# ============================================
 
 @bp.route('/api/participants/<participant_id>', methods=['PUT'])
 @require_admin
@@ -698,9 +695,7 @@ def remove_participant(participant_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ============================================
 # JUDGE MANAGEMENT
-# ============================================
 
 @bp.route('/api/judges', methods=['GET'])
 @require_admin
@@ -768,9 +763,7 @@ def delete_judge(judge_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ============================================
 # WEEK JUDGES & CRITERIA
-# ============================================
 
 @bp.route('/api/weeks/<week_id>/judges', methods=['POST'])
 @require_admin
@@ -824,9 +817,7 @@ def get_all_criteria():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ============================================
 # AUDIT LOGS
-# ============================================
 
 @bp.route('/api/audit-logs', methods=['GET'])
 @require_admin
@@ -870,9 +861,7 @@ def get_admin_email_from_request():
         print(f"Error getting admin email: {e}")
         return 'unknown@admin.com', None
 
-# ============================================
 # JUDGE PERMISSIONS MANAGEMENT
-# ============================================
 
 @bp.route('/api/judge-permissions', methods=['GET'])
 @require_admin
@@ -1005,9 +994,7 @@ def reactivate_judge_permission(permission_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ============================================
 # RESULTS & WINNERS
-# ============================================
 
 @bp.route('/api/results/<week_id>', methods=['GET'])
 @require_admin
