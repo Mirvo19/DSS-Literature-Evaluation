@@ -8,9 +8,6 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 # init supabase
 supabase = create_client(Config.SUPABASE_URL, Config.SUPABASE_KEY)
 
-# note: login/signup page routes live in routes/en/pages.py and routes/ne/pages.py
-# this blueprint is API-only (POST /auth/login, POST /auth/signup, etc.)
-
 @bp.route('/signup', methods=['POST'])
 def signup():
     try:
@@ -82,7 +79,7 @@ def login():
             # check admin
             is_admin = is_user_admin(response.user.id)
             
-            # build response with cookie
+            # build response
             resp = make_response(jsonify({
                 'message': 'Login successful',
                 'user': {
@@ -95,7 +92,7 @@ def login():
                 'is_admin': is_admin
             }), 200)
             
-            # set httponly cookie
+            # set cookie
             resp.set_cookie(
                 'access_token',
                 response.session.access_token,
@@ -117,7 +114,6 @@ def login():
 
 @bp.route('/logout', methods=['POST'])
 def logout():
-    # sign out
     try:
         token = request.headers.get('Authorization')
         if token and token.startswith('Bearer '):
@@ -133,7 +129,6 @@ def logout():
 
 @bp.route('/verify', methods=['GET'])
 def verify_token():
-    # verify and return user info
     try:
         token = request.headers.get('Authorization')
         

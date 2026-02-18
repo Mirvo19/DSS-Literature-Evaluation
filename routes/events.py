@@ -6,8 +6,8 @@ from utils.auth import require_auth
 bp = Blueprint('events', __name__)
 api_bp = Blueprint('events_api', __name__, url_prefix='/api')
 
-# note: page routes live in routes/en/pages.py and routes/ne/pages.py
-# init supabase with service key for judge scores in results
+# page routes are in routes/en/ and routes/ne/
+# service key needed for judge scores
 supabase = create_client(Config.SUPABASE_URL, Config.SUPABASE_SERVICE_KEY)
 
 @api_bp.route('/events', methods=['GET'])
@@ -22,7 +22,7 @@ def get_events():
 @require_auth
 def get_sessions(event_id):
     try:
-        # filter by language so each side only sees its own sessions
+        # filter by language
         language = request.args.get('lang', 'en')
         
         query = supabase.table('sessions')\
@@ -90,12 +90,11 @@ def get_week_detail(week_id):
 
 @api_bp.route('/winners', methods=['GET'])
 def get_winners():
-    # get weeks with published winners
     try:
         event_id = request.args.get('event_id')
         limit = request.args.get('limit', 50)
         
-        # Get weeks that have at least one winner
+        # get weeks with winners
         query = supabase.table('weeks')\
             .select('id, week_number, topic, topic_nepali, date, sessions!inner(session_number, event_id, events!inner(name, name_nepali))')\
             .order('date', desc=True)\
@@ -109,7 +108,6 @@ def get_winners():
         # Filter weeks that have winners
         weeks_with_winners = []
         for week in weeks_response.data:
-            # Check if this week has any winners
             winners_check = supabase.table('participants')\
                 .select('id', count='exact')\
                 .eq('week_id', week['id'])\
@@ -129,11 +127,10 @@ def get_winners():
 
 @api_bp.route('/week-rankings/<week_id>', methods=['GET'])
 def get_week_rankings(week_id):
-    # get all participants ranked for a week
     try:
         print(f"Getting rankings for week: {week_id}")
         
-        # Get week info
+        # get week info
         week = supabase.table('weeks')\
             .select('*, sessions!inner(session_number, events!inner(name, name_nepali))')\
             .eq('id', week_id)\
@@ -142,7 +139,7 @@ def get_week_rankings(week_id):
         
         print(f"Week info: {week.data}")
         
-        # Get all participants with their scores
+        # get participants
         participants = supabase.table('participants')\
             .select('id, student_id, position, is_winner')\
             .eq('week_id', week_id)\
@@ -155,14 +152,13 @@ def get_week_rankings(week_id):
         for participant in participants.data:
             print(f"\nProcessing participant: {participant['id']}")
             
-            # Get student info
             student = supabase.table('students')\
                 .select('*')\
                 .eq('id', participant['student_id'])\
                 .single()\
                 .execute()
             
-            # Get all judge scores for this participant
+            # get scores
             scores = supabase.table('judge_scores')\
                 .select('*')\
                 .eq('participant_id', participant['id'])\
@@ -171,7 +167,7 @@ def get_week_rankings(week_id):
             print(f"Found {len(scores.data)} scores for participant {participant['id']}")
             print(f"Scores data: {scores.data}")
             
-            # Calculate scores by judge type
+            # calculate scores by type
             overall_score = None
             content_score = None
             style_delivery_score = None
@@ -191,7 +187,7 @@ def get_week_rankings(week_id):
                 elif judge_type == 'language':
                     language_score = score_value
             
-            # Calculate total score
+            # total score
             scores_list = [overall_score, content_score, style_delivery_score, language_score]
             filtered_scores = list(filter(None, scores_list))
             total_score = sum(filtered_scores) if filtered_scores else 0
@@ -213,7 +209,7 @@ def get_week_rankings(week_id):
                 'total_score': total_score
             })
         
-        # Sort by position
+        # sort by position
         results.sort(key=lambda x: x['position'] if x['position'] else 999)
         
         print(f"\nReturning {len(results)} results")
@@ -233,7 +229,7 @@ def get_week_rankings(week_id):
 @require_auth
 def get_weeks_by_event(event_id):
     try:
-        # filter by language so each side sees its own data
+        # filter by language
         language = request.args.get('lang', 'en')
         
         sessions_response = supabase.table('sessions')\

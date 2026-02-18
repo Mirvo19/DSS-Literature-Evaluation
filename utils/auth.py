@@ -24,7 +24,6 @@ def require_auth(f):
         if not token:
             return jsonify({'error': 'No authorization token provided'}), 401
         
-        # strip bearer
         if token.startswith('Bearer '):
             token = token[7:]
         
@@ -42,7 +41,6 @@ def require_auth(f):
 def require_admin(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # try auth header first
         token = request.headers.get('Authorization')
         
         if token and token.startswith('Bearer '):
@@ -51,12 +49,11 @@ def require_admin(f):
             # fall back to cookie
             token = request.cookies.get('access_token')
         
-        # check if it's a page request
+        # html request check
         is_html_request = 'text/html' in request.headers.get('Accept', '')
         
         if not token:
             if is_html_request:
-                # no token, redirect to login
                 return redirect('/')
             return jsonify({'error': 'No authorization token provided'}), 401
         
@@ -73,7 +70,6 @@ def require_admin(f):
             
             if not result.data or len(result.data) == 0:
                 if is_html_request:
-                    # not admin, send back to login
                     return redirect('/')
                 return jsonify({'error': 'Unauthorized. Admin access required.'}), 403
             
@@ -90,7 +86,6 @@ def require_admin(f):
     return decorated_function
 
 def is_user_admin(user_id):
-    # check the admins table
     try:
         result = supabase_admin.table('admins').select('*').eq('user_id', user_id).execute()
         return result.data and len(result.data) > 0

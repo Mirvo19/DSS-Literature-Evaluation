@@ -12,9 +12,6 @@ bp = Blueprint('admin', __name__, url_prefix='/admin')
 # init supabase
 supabase = create_client(Config.SUPABASE_URL, Config.SUPABASE_SERVICE_KEY)
 
-# note: page routes live in routes/en/pages.py and routes/ne/pages.py
-# this blueprint is API-only so it stays language-agnostic
-
 # student api
 
 @bp.route('/api/students', methods=['GET'])
@@ -53,7 +50,6 @@ def create_student():
 @bp.route('/api/students/<student_id>', methods=['PUT'])
 @require_admin
 def update_student(student_id):
-    # build update fields
     try:
         data = request.json
         
@@ -79,7 +75,6 @@ def update_student(student_id):
 @bp.route('/api/students/<student_id>', methods=['DELETE'])
 @require_admin
 def delete_student(student_id):
-    # delete by id
     try:
         supabase.table('students').delete().eq('id', student_id).execute()
         return jsonify({'message': 'Student deleted successfully'}), 200
@@ -91,7 +86,6 @@ def delete_student(student_id):
 @bp.route('/api/import-csv', methods=['POST'])
 @require_admin
 def import_students_csv():
-    # parse and import
     try:
         data = request.json
         csv_content = data.get('csv_content')
@@ -99,7 +93,6 @@ def import_students_csv():
         if not csv_content:
             return jsonify({'error': 'No CSV content provided'}), 400
         
-        # parse the csv
         students, parse_errors = CSVStudentImporter.parse_csv(csv_content)
         
         if parse_errors and not students:
@@ -108,16 +101,13 @@ def import_students_csv():
                 'errors': parse_errors
             }), 400
         
-        # get existing students
         existing = supabase.table('students').select('full_name').execute()
         
-        # validate against db
         valid_students, warnings = CSVStudentImporter.validate_against_database(
             students, 
             existing.data
         )
         
-        # track results
         imported_count = 0
         import_errors = []
         
@@ -128,7 +118,6 @@ def import_students_csv():
             except Exception as e:
                 import_errors.append(f"Database import error: {str(e)}")
         
-        # build summary
         summary = CSVStudentImporter.generate_import_summary(
             total_rows=len(students),
             imported=imported_count,
@@ -146,7 +135,6 @@ def import_students_csv():
 @bp.route('/api/sessions', methods=['GET'])
 @require_admin
 def get_all_sessions():
-    # get with event info, optionally filtered by language
     try:
         language = request.args.get('lang')
         
@@ -154,7 +142,7 @@ def get_all_sessions():
             .select('*, events!inner(name, name_nepali)')\
             .order('created_at', desc=True)
         
-        # filter by language if provided (admin sees only their language side)
+        # filter by language
         if language in ('en', 'ne'):
             query = query.eq('language', language)
         
@@ -167,14 +155,13 @@ def get_all_sessions():
 @bp.route('/api/sessions', methods=['POST'])
 @require_admin
 def create_session():
-    # create new session
     try:
         data = request.json
         
         if not data.get('event_id') or not data.get('name'):
             return jsonify({'error': 'Event ID and name are required'}), 400
         
-        # language must be provided so the session belongs to the right side
+        # language must be en or ne
         language = data.get('language', 'en')
         if language not in ('en', 'ne'):
             return jsonify({'error': 'language must be en or ne'}), 400
@@ -196,7 +183,6 @@ def create_session():
 @bp.route('/api/sessions/<session_id>', methods=['PUT'])
 @require_admin
 def update_session(session_id):
-    # build update fields
     try:
         data = request.json
         
@@ -217,7 +203,6 @@ def update_session(session_id):
 @bp.route('/api/sessions/<session_id>', methods=['DELETE'])
 @require_admin
 def delete_session(session_id):
-    # delete by id
     try:
         supabase.table('sessions').delete().eq('id', session_id).execute()
         return jsonify({'message': 'Session deleted successfully'}), 200
@@ -229,7 +214,6 @@ def delete_session(session_id):
 @bp.route('/api/weeks', methods=['GET'])
 @require_admin
 def get_all_weeks():
-    # get with session info
     try:
         response = supabase.table('weeks')\
             .select('*, sessions!inner(session_number, name, events!inner(name))')\
@@ -243,10 +227,8 @@ def get_all_weeks():
 @bp.route('/api/weeks', methods=['POST'])
 @require_admin
 def create_week():
-    # create week with participants
     try:
         data = request.json
-        print(f"Create week request data: {data}")  # debug
         
         if not data.get('session_id') or not data.get('week_number'):
             return jsonify({'error': 'Session ID and week number are required'}), 400
@@ -284,7 +266,7 @@ def create_week():
         participant_mode = data.get('participant_mode', 'manual')
         
         if participant_mode == 'random':
-            # Random selection for Extempore
+            # random selection
             result = _handle_random_selection(
                 week_id=week_id,
                 session_id=session_id,

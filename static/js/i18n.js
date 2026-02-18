@@ -270,7 +270,7 @@ class I18n {
     }
     
     loadLanguage() {
-        // load saved or default
+        // load saved language
         const saved = localStorage.getItem('language');
         if (saved && (saved === 'en' || saved === 'ne')) {
             return saved;

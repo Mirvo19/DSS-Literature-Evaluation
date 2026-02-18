@@ -123,7 +123,7 @@ class AdminPanel {
     
     async loadSessions() {
         try {
-            // filter sessions to the current language side
+            // filter by language
             const lang = window.APP_LANG || localStorage.getItem('language') || 'en';
             const response = await fetch(`/admin/api/sessions?lang=${lang}`, {
                 headers: auth.getAuthHeaders()

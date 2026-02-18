@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template
 
-# nepali page routes — all under /ne/, lang='ne' injected into every template
+# nepali page routes
 
 bp = Blueprint('ne_pages', __name__, url_prefix='/ne')
 

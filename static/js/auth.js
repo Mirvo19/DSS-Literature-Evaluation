@@ -24,7 +24,7 @@ class Auth {
                 throw new Error(data.error || 'Signup failed');
             }
             
-            // save session if one was returned
+            // save session
             if (data.session && data.session.access_token) {
                 this.setSession(data.session.access_token, data.user, false);
             }
@@ -96,7 +96,7 @@ class Auth {
             
             const data = await response.json();
             this.user = data.user;
-            this.isAdmin = data.is_admin; // from server only, never stored locally
+            this.isAdmin = data.is_admin; // from server only
             localStorage.setItem('user', JSON.stringify(data.user));
             
             return true;
@@ -113,7 +113,7 @@ class Auth {
         
         localStorage.setItem('access_token', token);
         localStorage.setItem('user', JSON.stringify(user));
-        // is_admin stays in memory only
+        // is_admin in memory only
     }
     
     clearSession() {
@@ -151,10 +151,10 @@ class Auth {
     }
 }
 
-// global auth instance
+// global instance
 const auth = new Auth();
 
-// redirects to login if not authenticated
+// redirect if not authenticated
 async function requireAuth() {
     if (!auth.isAuthenticated()) {
         window.location.href = '/';
@@ -170,7 +170,7 @@ async function requireAuth() {
     return true;
 }
 
-// redirects away if not an admin
+// redirect if not admin
 async function requireAdmin() {
     const authenticated = await requireAuth();
     if (!authenticated) {
@@ -179,7 +179,7 @@ async function requireAdmin() {
     
     if (!auth.checkAdmin()) {
         alert(i18n.t('error') + ': Admin access required');
-        // redirect to the correct language side's dashboard
+        // redirect to dashboard
         const lang = window.APP_LANG || localStorage.getItem('language') || 'en';
         window.location.href = '/' + lang + '/dashboard';
         return false;
@@ -188,17 +188,17 @@ async function requireAdmin() {
     return true;
 }
 
-// show/hide elements based on auth state
+// update ui based on auth state
 function updateUIForAuth() {
     const isAuth = auth.isAuthenticated();
     const isAdmin = auth.checkAdmin();
     
-    // hide admin-only elements for non-admins
+    // hide admin elements
     document.querySelectorAll('[data-admin-only]').forEach(el => {
         el.style.display = isAdmin ? '' : 'none';
     });
     
-    // hide auth-required elements when logged out
+    // hide auth elements when logged out
     document.querySelectorAll('[data-auth-required]').forEach(el => {
         el.style.display = isAuth ? '' : 'none';
     });

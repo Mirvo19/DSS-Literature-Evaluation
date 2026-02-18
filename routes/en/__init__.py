@@ -1,1 +1,1 @@
-# English language page blueprints
+# english page blueprints

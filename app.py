@@ -16,7 +16,7 @@ app.register_blueprint(events.api_bp)
 app.register_blueprint(admin.bp)
 app.register_blueprint(judge.bp)
 
-# page routes — english (/en/...) and nepali (/ne/...)
+# page routes
 from routes.en import pages as en_pages
 from routes.ne import pages as ne_pages
 

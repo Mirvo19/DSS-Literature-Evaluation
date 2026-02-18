@@ -16,7 +16,7 @@ class App {
         // load events
         await this.loadEvents();
         
-        // set up header
+        // setup header
         this.updateHeader();
         updateUIForAuth();
         
@@ -30,7 +30,7 @@ class App {
             const data = await response.json();
             this.events = data.events;
             
-            // find the current event
+            // find current event
             const currentEvent = this.events.find(e => 
                 e.name.toLowerCase() === this.selectedEvent.toLowerCase()
             );
@@ -58,7 +58,7 @@ class App {
             });
         }
         
-        // wire up logout
+        // logout button
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', async () => {

@@ -7,12 +7,10 @@ import json
 supabase = create_client(Config.SUPABASE_URL, Config.SUPABASE_SERVICE_KEY)
 
 class AuditLogger:
-    # creates audit log entries
     
     @staticmethod
     def log_action(admin_email, admin_id, action_type, entity_type, entity_id=None, 
                    entity_name=None, old_value=None, new_value=None, description=None):
-        # log an admin action
         try:
             log_entry = {
                 'admin_email': admin_email,
@@ -33,9 +31,7 @@ class AuditLogger:
     
     @staticmethod
     def get_current_user_info():
-        # get current user email
         try:
-            # placeholder
             return "admin@example.com", None
         except:
             return "unknown", None

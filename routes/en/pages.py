@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template
 
-# english page routes — all under /en/, lang='en' injected into every template
+# english page routes
 
 bp = Blueprint('en_pages', __name__, url_prefix='/en')
 
