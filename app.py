@@ -23,6 +23,21 @@ from routes.ne import pages as ne_pages
 app.register_blueprint(en_pages.bp)
 app.register_blueprint(ne_pages.bp)
 
+@app.after_request
+def inject_vercel_speed_insights(response):
+    """Inject Vercel Speed Insights script into every HTML page."""
+    if 'text/html' in response.content_type:
+        script = (
+            b'\n<script>'
+            b'window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };'
+            b'</script>'
+            b'\n<script defer src="/_vercel/speed-insights/script.js"></script>'
+            b'\n</head>'
+        )
+        response.direct_passthrough = False
+        response.data = response.data.replace(b'</head>', script, 1)
+    return response
+
 @app.route('/')
 def root():
     return redirect('/login')
