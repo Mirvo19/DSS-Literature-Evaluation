@@ -89,17 +89,25 @@ def get_week_participants(week_id):
         if not judge_email:
             return jsonify({'error': 'Could not identify judge'}), 401
         
-        # verify permission
-        permission = supabase.table('judge_permissions')\
+        # get the specific judge_type requested (required to avoid mixing roles)
+        requested_judge_type = request.args.get('judge_type')
+        
+        # verify permission - filter to the specific judge_type if provided
+        perm_query = supabase.table('judge_permissions')\
             .select('*')\
             .eq('user_email', judge_email)\
             .eq('week_id', week_id)\
-            .eq('is_active', True)\
-            .execute()
+            .eq('is_active', True)
+        
+        if requested_judge_type:
+            perm_query = perm_query.eq('judge_type', requested_judge_type)
+        
+        permission = perm_query.execute()
         
         if not permission.data:
-            return jsonify({'error': 'No permission to score this week'}), 403
+            return jsonify({'error': 'No permission to score this week with that role'}), 403
         
+        # use the exact judge_type from the matched permission row
         judge_type = permission.data[0]['judge_type']
         
         # get all participants
