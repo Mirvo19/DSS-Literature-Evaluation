@@ -115,6 +115,7 @@
     <script>
         let currentAssignments = [];
         let currentWeek = null;
+        let currentJudgeType = null;
         let criteriaByType = {};
         
         async function loadJudgeAssignments() {
@@ -170,24 +171,32 @@
             
             showLoading();
             try {
-                // Load week participants
-                const response = await fetch(`/admin/api/weeks/${assignment.week_id}`, {
+                // Load participants using judge API (no admin privileges needed)
+                const response = await fetch(`/judge/api/week/${assignment.week_id}/participants`, {
                     headers: auth.getAuthHeaders()
                 });
                 
-                if (!response.ok) throw new Error('Failed to load week details');
+                if (!response.ok) throw new Error('Failed to load week participants');
                 
                 const data = await response.json();
-                currentWeek = data.week;
+                
+                // Build currentWeek from assignment data + participant list
+                currentWeek = {
+                    id: assignment.week_id,
+                    week_number: assignment.weeks?.week_number,
+                    topic: assignment.weeks?.topic,
+                    participants: data.participants
+                };
+                currentJudgeType = data.judge_type || assignment.judge_type;
                 
                 // Load criteria for this judge type
-                await loadCriteria(assignment.judge_type);
+                await loadCriteria(currentJudgeType);
                 
                 document.getElementById('weekInfo').textContent = `Week ${currentWeek.week_number}`;
                 document.getElementById('topicInfo').textContent = currentWeek.topic || 'No Topic';
-                document.getElementById('roleInfo').textContent = formatJudgeType(assignment.judge_type);
+                document.getElementById('roleInfo').textContent = formatJudgeType(currentJudgeType);
                 
-                await displayParticipantsForJudging(currentWeek.participants, assignment.judge_type);
+                await displayParticipantsForJudging(currentWeek.participants, currentJudgeType);
                 
                 document.getElementById('scoringArea').classList.remove('hidden');
                 window.scrollTo(0, document.getElementById('scoringArea').offsetTop);
@@ -200,12 +209,12 @@
         
         async function loadCriteria(judgeType) {
             try {
-                const response = await fetch('/admin/api/judging-criteria', {
+                const response = await fetch(`/judge/api/criteria?judge_type=${judgeType}`, {
                     headers: auth.getAuthHeaders()
                 });
                 
                 const data = await response.json();
-                criteriaByType[judgeType] = data.criteria.filter(c => c.category === judgeType);
+                criteriaByType[judgeType] = data.criteria || [];
             } catch (error) {
                 console.error('Failed to load criteria:', error);
             }
@@ -401,9 +410,8 @@
                 hideModal('scoreModal');
                 
                 // Reload participants to show updated scores
-                const assignment = currentAssignments.find(a => a.week_id === currentWeek.id);
-                if (assignment) {
-                    await displayParticipantsForJudging(currentWeek.participants, assignment.judge_type);
+                if (currentWeek && currentJudgeType) {
+                    await displayParticipantsForJudging(currentWeek.participants, currentJudgeType);
                 }
             } catch (error) {
                 showAlert('Failed to save score: ' + error.message, 'error');
