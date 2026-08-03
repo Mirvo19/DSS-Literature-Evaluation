@@ -19,9 +19,11 @@
                             <a href="/{{ lang }}/dashboard" class="nav-link" data-i18n="back">Back</a>
                         </div>
 
-                        <div class="nav-item" data-admin-only hidden style="display: none;">
+                        {% if is_admin %}
+                        <div class="nav-item" data-admin-only>
                             <a href="/{{ lang }}/admin/dashboard" class="nav-link" data-i18n="adminPanel">Admin Panel</a>
                         </div>
+                        {% endif %}
 
                         <div class="nav-item">
                             <button id="logoutBtn" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>

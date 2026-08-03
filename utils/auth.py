@@ -92,3 +92,21 @@ def is_user_admin(user_id):
     except Exception as e:
         print(f"Admin check error: {e}")
         return False
+
+
+def is_current_request_admin():
+    token = request.headers.get('Authorization')
+
+    if token and token.startswith('Bearer '):
+        token = token[7:]
+    elif not token:
+        token = request.cookies.get('access_token')
+
+    if not token:
+        return False
+
+    user = get_user_from_token(token)
+    if not user:
+        return False
+
+    return is_user_admin(user.id)

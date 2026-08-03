@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template
-from utils.auth import require_admin
+from utils.auth import require_admin, is_current_request_admin
 
 # nepali page routes
 
@@ -21,15 +21,15 @@ def signup_page():
 
 @bp.route('/dashboard')
 def dashboard_page():
-    return render_template('dashboard.html', lang=LANG)
+    return render_template('dashboard.html', lang=LANG, is_admin=is_current_request_admin())
 
 @bp.route('/winners')
 def winners_page():
-    return render_template('winners.html', lang=LANG)
+    return render_template('winners.html', lang=LANG, is_admin=is_current_request_admin())
 
 @bp.route('/week/<week_id>')
 def week_detail_page(week_id):
-    return render_template('week-detail.html', lang=LANG)
+    return render_template('week-detail.html', lang=LANG, is_admin=is_current_request_admin())
 
 @bp.route('/week-rankings/<week_id>')
 def week_rankings_page(week_id):

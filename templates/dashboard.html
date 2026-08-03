@@ -35,9 +35,11 @@
                         </div>
 
                         <!-- Admin Panel Link (admin only) -->
-                        <div class="nav-item" data-admin-only hidden style="display: none;">
+                        {% if is_admin %}
+                        <div class="nav-item" data-admin-only>
                             <a href="/{{ lang }}/admin/dashboard" class="nav-link" data-i18n="adminPanel">Admin Panel</a>
                         </div>
+                        {% endif %}
 
                         <!-- Logout Button -->
                         <div class="nav-item">
