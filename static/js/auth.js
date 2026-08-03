@@ -195,6 +195,7 @@ function updateUIForAuth() {
     
     // hide admin elements
     document.querySelectorAll('[data-admin-only]').forEach(el => {
+        el.hidden = !isAdmin;
         el.style.display = isAdmin ? '' : 'none';
     });
     
