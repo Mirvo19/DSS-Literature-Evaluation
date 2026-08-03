@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template
+from utils.auth import require_admin
 
 # nepali page routes
 
@@ -37,30 +38,37 @@ def week_rankings_page(week_id):
 # admin pages
 
 @bp.route('/admin/dashboard')
+@require_admin
 def admin_dashboard_page():
     return render_template('admin/dashboard.html', lang=LANG)
 
 @bp.route('/admin/students')
+@require_admin
 def admin_students_page():
     return render_template('admin/students.html', lang=LANG)
 
 @bp.route('/admin/sessions')
+@require_admin
 def admin_sessions_page():
     return render_template('admin/sessions.html', lang=LANG)
 
 @bp.route('/admin/weeks')
+@require_admin
 def admin_weeks_page():
     return render_template('admin/weeks.html', lang=LANG)
 
 @bp.route('/admin/logs')
+@require_admin
 def admin_logs_page():
     return render_template('admin/logs.html', lang=LANG)
 
 @bp.route('/admin/judge-permissions')
+@require_admin
 def admin_judge_permissions_page():
     return render_template('admin/judge_permissions.html', lang=LANG)
 
 @bp.route('/admin/results')
+@require_admin
 def admin_results_page():
     return render_template('admin/results.html', lang=LANG)
 

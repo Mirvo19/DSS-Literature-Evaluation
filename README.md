@@ -40,53 +40,59 @@ FLASK_ENV
 ### 2. Supabase Setup
 
 1. Create a new Supabase project at [supabase.com](https://supabase.com)
-2. Run the complete SQL schema from `database/MASTER_SCHEMA.sql` in the Supabase SQL editor
+2. Run the complete SQL schema from `SQL/MASTER_SCHEMA.sql` in the Supabase SQL editor
 3. Configure JWT expiry to 14400 seconds (4 hours) in Authentication settings
 4. Copy your project URL and API keys (anon key and service role key)
 
 ### 3. Local Setup
 
 1. Clone this repository
-2. Create a virtual environment:
-   ```bash
-   python -m venv venv
-   venv\Scripts\activate  # Windows
-   ```
-
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. Create `.env` file:
-   ```bash
-   cp .env.example .env
-   ```
-
-5. Update `.env` with your Supabase credentials
-
-6. Run the application:
-   ```bash
-   python app.py
-   ```
-
-7. Open browser to `http://localhost:5000`
-
-## Admin Setup
-
-To grant admin access to a user:
-
-1. Sign up a user account normally
-2. Get the user's UUID from Supabase Auth dashboard
-3. Run this SQL in Supabase SQL editor:
-   ```sql
-   INSERT INTO admins (user_id) VALUES ('user-uuid-here');
-   ```
-
-## Tech Stack
-
-- **Backend**: Python Flask
-- **Frontend**: HTML, CSS, JavaScript
+├── app.py              # Flask application entry point
+├── config.py           # Configuration settings
+├── requirements.txt    # Python dependencies
+├── runtime.txt         # Python runtime for deployment
+├── vercel.json         # Vercel deployment config
+├── SQL/
+│   └── MASTER_SCHEMA.sql # Complete database schema
+├── routes/
+│   ├── auth.py        # Authentication routes
+│   ├── admin.py       # Admin CMS API routes
+│   ├── events.py      # Public event routes
+│   ├── judge.py       # Judge scoring routes
+│   ├── en/
+│   │   └── pages.py   # English page routes
+│   └── ne/
+│       └── pages.py   # Nepali page routes
+├── utils/
+│   ├── auth.py        # Authentication utilities
+│   ├── audit_logger.py # Action logging utility
+│   ├── csv_handler.py # CSV import logic
+│   └── random_selector.py # Extempore selection logic
+├── static/
+│   ├── css/
+│   │   └── styles.css # Application styles
+│   └── js/
+│       ├── auth.js    # Authentication logic
+│       ├── admin.js   # Admin panel logic
+│       ├── i18n.js    # Internationalization
+│       └── main.js    # Main application logic
+└── templates/
+   ├── dashboard.html # User dashboard
+   ├── login.html     # Base login page
+   ├── signup.html    # Base signup page
+   ├── winners.html   # Winners listing
+   ├── week-detail.html
+   ├── week-rankings.html
+   ├── admin/
+   │   ├── dashboard.html
+   │   ├── students.html
+   │   ├── sessions.html
+   │   ├── weeks.html
+   │   ├── results.html
+   │   ├── logs.html
+   │   └── judge_permissions.html
+   └── judge/
+      └── scoring.html
 - **Database & Auth**: Supabase (PostgreSQL + Auth)
 - **Hosting**: Vercel
 - **Analytics**: Vercel Speed Insights
@@ -94,13 +100,13 @@ To grant admin access to a user:
 ## Project Structure
 
 ```
-Ver1/
+.
 ├── app.py                 # Flask application entry point
 ├── config.py              # Configuration settings
 ├── requirements.txt       # Python dependencies
-├── MASTER.md             # Complete system documentation
-├── database/
-│   └── MASTER_SCHEMA.sql # Complete database schema
+├── MASTER.md              # Complete system documentation
+├── SQL/
+│   └── MASTER_SCHEMA.sql  # Complete database schema
 ├── routes/
 │   ├── auth.py           # Authentication routes
 │   ├── events.py         # Public event routes
@@ -119,7 +125,7 @@ Ver1/
 │       ├── main.js       # Main application logic
 │       ├── admin.js      # Admin panel logic
 │       └── i18n.js       # Internationalization
-└── templates/
+├── templates/
     ├── login.html        # Login page
     ├── signup.html       # Signup page
     ├── dashboard.html    # User dashboard

@@ -72,7 +72,7 @@ Visit [supabase.com](https://supabase.com) and create a new project. Save the fo
 **2. Setup Database**
 
 Navigate to the SQL Editor in your Supabase dashboard and run the complete schema:
-- Open `database/MASTER_SCHEMA.sql`
+- Open `SQL/MASTER_SCHEMA.sql`
 - Copy all contents
 - Paste into SQL Editor
 - Execute the query
@@ -83,7 +83,7 @@ This will create all tables, indexes, policies, triggers, and default data.
 
 ```bash
 # Clone or download the repository
-cd Ver1
+cd "DSS Talk"
 
 # Create virtual environment
 python -m venv venv
@@ -142,52 +142,57 @@ You now have full admin access.
 ### Project Structure
 
 ```
-Ver1/
 ├── app.py                      # Application entry point
 ├── config.py                   # Environment configuration
 ├── requirements.txt            # Python dependencies
-├── .env                        # Environment variables (not in git)
-├── .gitignore                  # Git ignore patterns
+├── runtime.txt                 # Python runtime for deployment
+├── vercel.json                 # Vercel deployment config
 │
-├── database/
+├── SQL/
 │   └── MASTER_SCHEMA.sql       # Complete database schema
 │
 ├── routes/
 │   ├── auth.py                 # Authentication endpoints
-│   ├── events.py               # Public event endpoints
 │   ├── admin.py                # Admin management endpoints
-│   └── judge.py                # Judge scoring endpoints
+│   ├── events.py               # Public event endpoints
+│   ├── judge.py                # Judge scoring endpoints
+│   ├── en/
+│   │   └── pages.py            # English page routes
+│   └── ne/
+│       └── pages.py            # Nepali page routes
 │
 ├── utils/
 │   ├── auth.py                 # Authentication decorators
+│   ├── audit_logger.py         # Action logging utility
 │   ├── csv_handler.py          # CSV import logic
-│   ├── random_selector.py      # Extempore selection algorithm
-│   └── audit_logger.py         # Action logging utility
+│   └── random_selector.py      # Extempore selection algorithm
 │
 ├── static/
 │   ├── css/
 │   │   └── styles.css          # Application styles
 │   └── js/
-│       ├── i18n.js             # Internationalization
 │       ├── auth.js             # Client auth logic
-│       ├── main.js             # Main application
-│       └── admin.js            # Admin panel logic
+│       ├── admin.js            # Admin panel logic
+│       ├── i18n.js             # Internationalization
+│       └── main.js             # Main application
 │
 └── templates/
-    ├── login.html              # Login page
-    ├── signup.html             # Registration page
-    ├── dashboard.html          # User dashboard
-    ├── winners.html            # Published results
-    ├── week-rankings.html      # Detailed rankings
-    ├── admin/
-    │   ├── dashboard.html      # Admin home
-    │   ├── students.html       # Student management
-    │   ├── sessions.html       # Session management
-    │   ├── weeks.html          # Week management
-    │   ├── results.html        # Results and publishing
-    │   └── judge_permissions.html
-    └── judge/
-        └── scoring.html        # Judge scoring interface
+   ├── login.html              # Base login page
+   ├── signup.html             # Base signup page
+   ├── dashboard.html          # User dashboard
+   ├── winners.html            # Published results
+   ├── week-detail.html        # Detailed week view
+   ├── week-rankings.html      # Detailed rankings
+   ├── admin/
+   │   ├── dashboard.html      # Admin home
+   │   ├── students.html       # Student management
+   │   ├── sessions.html       # Session management
+   │   ├── weeks.html          # Week management
+   │   ├── logs.html           # Audit log viewer
+   │   ├── results.html        # Results and publishing
+   │   └── judge_permissions.html
+   └── judge/
+      └── scoring.html        # Judge scoring interface
 ```
 
 ### Data Flow
@@ -1105,7 +1110,7 @@ SUPABASE_SERVICE_KEY  # Service role key (keep secret)
 
 ### File Locations
 
-- **Database Schema**: `database/MASTER_SCHEMA.sql`
+- **Database Schema**: `SQL/MASTER_SCHEMA.sql`
 - **Environment Template**: `.env.example`
 - **Dependencies**: `requirements.txt`
 - **Application Entry**: `app.py`
