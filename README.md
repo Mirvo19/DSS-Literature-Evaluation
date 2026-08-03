@@ -14,11 +14,20 @@ A full-stack web application for managing school speaking events including Debat
 - **Judge System**: Temporary permissions with role-based scoring
 - **Results Publishing**: Position-based ranking with publish/unpublish controls
 
-## Tech Stack
+## Deployment
 
-- **Backend**: Python Flask
-- **Frontend**: HTML, CSS, JavaScript
-- **Database & Auth**: Supabase (PostgreSQL + Auth)
+This app is hosted on **Vercel**. Deployment is automatic on every push to `main` via the `vercel.json` configuration in the repo root.
+
+Set the following environment variables in your Vercel project dashboard:
+```
+SUPABASE_URL
+SUPABASE_KEY
+SUPABASE_SERVICE_KEY
+FLASK_SECRET_KEY
+FLASK_ENV
+```
+
+---
 
 ## Setup Instructions
 
@@ -73,6 +82,14 @@ To grant admin access to a user:
    ```sql
    INSERT INTO admins (user_id) VALUES ('user-uuid-here');
    ```
+
+## Tech Stack
+
+- **Backend**: Python Flask
+- **Frontend**: HTML, CSS, JavaScript
+- **Database & Auth**: Supabase (PostgreSQL + Auth)
+- **Hosting**: Vercel
+- **Analytics**: Vercel Speed Insights
 
 ## Project Structure
 

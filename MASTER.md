@@ -692,92 +692,46 @@ SUPABASE_KEY=your-production-anon-key
 SUPABASE_SERVICE_KEY=your-production-service-key
 ```
 
-**3. Python Setup**
+**3. Deploy to Vercel**
+
+This application is hosted on **Vercel** using the `@vercel/python` builder. The `vercel.json` in the repo root handles all routing and build configuration automatically.
 
 ```bash
-# Use production WSGI server
-pip install gunicorn
-
-# Install all dependencies
-pip install -r requirements.txt
+# Install Vercel CLI (optional, for manual deploys)
+npm i -g vercel
+vercel --prod
 ```
 
-**4. Run with Gunicorn**
+Or simply push to `main` on GitHub — Vercel will auto-deploy on every push.
 
-```bash
-gunicorn -w 4 -b 0.0.0.0:8000 app:app
+**4. Set Environment Variables**
+
+In the Vercel project dashboard → Settings → Environment Variables, add:
+
+```
+FLASK_SECRET_KEY   = <strong random string>
+FLASK_ENV          = production
+SUPABASE_URL       = https://your-project.supabase.co
+SUPABASE_KEY       = your-anon-public-key
+SUPABASE_SERVICE_KEY = your-service-role-key
 ```
 
-Configuration:
-- `-w 4`: 4 worker processes
-- `-b 0.0.0.0:8000`: Bind to all interfaces on port 8000
-- `app:app`: app.py file, app variable
+> HTTPS and SSL are handled automatically by Vercel — no Nginx or Let's Encrypt setup needed.
 
-**5. Reverse Proxy (Nginx)**
+**5. Speed Insights**
 
-Sample Nginx configuration:
-
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    location / {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-
-    location /static {
-        alias /path/to/Ver1/static;
-    }
-}
-```
-
-**6. SSL Certificate**
-
-Use Let's Encrypt for free SSL:
-```bash
-sudo certbot --nginx -d your-domain.com
-```
-
-**7. Process Management**
-
-Use systemd or supervisor to keep app running:
-
-Sample systemd service (`/etc/systemd/system/dsstalk.service`):
-```ini
-[Unit]
-Description=DSS Talk Application
-After=network.target
-
-[Service]
-User=www-data
-WorkingDirectory=/path/to/Ver1
-Environment="PATH=/path/to/Ver1/venv/bin"
-ExecStart=/path/to/Ver1/venv/bin/gunicorn -w 4 -b 127.0.0.1:8000 app:app
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Enable and start:
-```bash
-sudo systemctl enable dsstalk
-sudo systemctl start dsstalk
-```
+Vercel Speed Insights is already integrated in `app.py` via an `after_request` hook that injects the tracking script into every HTML page. Once deployed, view Core Web Vitals in the Vercel dashboard under **Speed Insights**.
 
 ### Security Checklist
 
-- [ ] Change FLASK_SECRET_KEY to random value
+- [ ] Change FLASK_SECRET_KEY to a strong random value
 - [ ] Set FLASK_ENV to production
-- [ ] Never commit .env file
-- [ ] Use HTTPS in production
-- [ ] Keep SUPABASE_SERVICE_KEY secret
+- [ ] Never commit `.env` — use Vercel Environment Variables dashboard
+- [ ] HTTPS enforced automatically by Vercel
+- [ ] Keep SUPABASE_SERVICE_KEY secret (set only in Vercel dashboard)
 - [ ] Enable Supabase RLS policies
 - [ ] Regular database backups
-- [ ] Monitor logs for errors
+- [ ] Monitor logs via Vercel dashboard → Functions → Logs
 - [ ] Update dependencies regularly
 
 ### Performance Optimization

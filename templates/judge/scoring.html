@@ -171,8 +171,8 @@
             
             showLoading();
             try {
-                // Load participants using judge API (no admin privileges needed)
-                const response = await fetch(`/judge/api/week/${assignment.week_id}/participants`, {
+                // Load participants using judge API, passing the specific judge_type to avoid role conflicts
+                const response = await fetch(`/judge/api/week/${assignment.week_id}/participants?judge_type=${assignment.judge_type}`, {
                     headers: auth.getAuthHeaders()
                 });
                 
@@ -187,7 +187,8 @@
                     topic: assignment.weeks?.topic,
                     participants: data.participants
                 };
-                currentJudgeType = data.judge_type || assignment.judge_type;
+                // Use the judge_type confirmed by the server (matches the clicked assignment)
+                currentJudgeType = data.judge_type;
                 
                 // Load criteria for this judge type
                 await loadCriteria(currentJudgeType);
