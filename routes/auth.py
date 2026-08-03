@@ -8,6 +8,11 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 # init supabase
 supabase = create_client(Config.SUPABASE_URL, Config.SUPABASE_KEY)
 
+
+def _cookie_secure():
+    forwarded_proto = request.headers.get('X-Forwarded-Proto', '').split(',')[0].strip().lower()
+    return Config.ENV == 'production' or request.is_secure or forwarded_proto == 'https'
+
 @bp.route('/signup', methods=['POST'])
 def signup():
     try:
@@ -43,7 +48,7 @@ def signup():
                     'access_token',
                     response.session.access_token,
                     httponly=True,
-                    secure=True,
+                    secure=_cookie_secure(),
                     samesite='Lax',
                     max_age=60*60*24*7  # 7 days
                 )
@@ -97,7 +102,7 @@ def login():
                 'access_token',
                 response.session.access_token,
                 httponly=True,
-                secure=True,  # https only
+                secure=_cookie_secure(),
                 samesite='Lax',
                 max_age=60*60*24*7  # 7 days
             )
@@ -122,7 +127,7 @@ def logout():
         
         # clear the cookie
         resp = make_response(jsonify({'message': 'Logout successful'}), 200)
-        resp.set_cookie('access_token', '', expires=0, httponly=True, secure=True, samesite='Lax')
+        resp.set_cookie('access_token', '', expires=0, httponly=True, secure=_cookie_secure(), samesite='Lax')
         return resp
     except Exception as e:
         return jsonify({'error': f'Logout error: {str(e)}'}), 400
