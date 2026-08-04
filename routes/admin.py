@@ -6,11 +6,80 @@ from utils.csv_handler import CSVStudentImporter
 from utils.random_selector import ExtemporeRandomSelector
 from utils.audit_logger import AuditLogger
 import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+from seed.seer import SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD, SEED_JUDGES, SEED_MARKER
 
 bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 # init supabase
 supabase = create_client(Config.SUPABASE_URL, Config.SUPABASE_SERVICE_KEY)
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _run_seed_script(script_name):
+    script_path = PROJECT_ROOT / 'seed' / script_name
+
+    if not script_path.exists():
+        return {
+            'success': False,
+            'error': f'Script not found: {script_path}'
+        }, 404
+
+    try:
+        completed = subprocess.run(
+            [sys.executable, str(script_path)],
+            cwd=str(PROJECT_ROOT),
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+
+        return {
+            'success': True,
+            'output': completed.stdout.strip(),
+            'error_output': completed.stderr.strip()
+        }, 200
+    except subprocess.CalledProcessError as error:
+        return {
+            'success': False,
+            'error': error.stderr.strip() or error.stdout.strip() or str(error)
+        }, 500
+
+
+@bp.route('/api/qa-accounts', methods=['GET'])
+@require_admin
+def get_qa_accounts():
+    try:
+        accounts = [
+            {
+                'role': 'admin',
+                'label': 'QA Seed Admin',
+                'full_name': 'QA Seed Admin',
+                'email': SEED_ADMIN_EMAIL,
+                'password': SEED_ADMIN_PASSWORD,
+                'title': 'Administrator',
+                'seed_marker': SEED_MARKER,
+            }
+        ]
+
+        for judge in SEED_JUDGES:
+            accounts.append({
+                'role': judge['role'],
+                'label': judge['title'],
+                'full_name': judge['full_name'],
+                'email': judge['email'],
+                'password': judge['password'],
+                'title': judge['title'],
+                'seed_marker': SEED_MARKER,
+            })
+
+        return jsonify({'accounts': accounts}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # student api
 
@@ -80,6 +149,52 @@ def delete_student(student_id):
         return jsonify({'message': 'Student deleted successfully'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@bp.route('/api/seed', methods=['POST'])
+@require_admin
+def seed_database():
+    try:
+        result, status_code = _run_seed_script('seer.py')
+
+        if status_code == 200:
+            admin_email, admin_id = get_admin_email_from_request()
+            AuditLogger.log_action(
+                admin_email=admin_email,
+                admin_id=admin_id,
+                action_type='CREATE',
+                entity_type='database_seed',
+                entity_id=None,
+                entity_name='QA Seed',
+                description='Seeded QA data from the admin panel'
+            )
+
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@bp.route('/api/unseed', methods=['POST'])
+@require_admin
+def unseed_database():
+    try:
+        result, status_code = _run_seed_script('unseeder.py')
+
+        if status_code == 200:
+            admin_email, admin_id = get_admin_email_from_request()
+            AuditLogger.log_action(
+                admin_email=admin_email,
+                admin_id=admin_id,
+                action_type='DELETE',
+                entity_type='database_seed',
+                entity_id=None,
+                entity_name='QA Seed',
+                description='Removed QA seed data from the admin panel'
+            )
+
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # csv import
 

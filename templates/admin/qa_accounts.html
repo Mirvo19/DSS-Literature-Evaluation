@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA Accounts - DSS Talk</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="page-wrapper">
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <a href="/{{ lang }}/admin/dashboard" class="logo">DSS Talk Admin</a>
+
+                    <nav class="nav-menu">
+                        <div class="nav-item">
+                            <a href="/{{ lang }}/admin/dashboard" class="nav-link">Admin Dashboard</a>
+                        </div>
+
+                        <div class="nav-item">
+                            <a href="/{{ lang }}/admin/logs" class="nav-link">Admin Logs</a>
+                        </div>
+
+                        <div class="nav-item">
+                            <button id="logoutBtn" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <main class="content-wrapper">
+            <div class="container">
+                <div class="card">
+                    <div class="card-header">
+                        <h1 class="card-title">QA Accounts</h1>
+                    </div>
+                    <div class="card-body">
+                        <p style="margin-bottom: 1rem; color: #6b7280;">
+                            This page shows only the seeded QA login accounts, their roles, passwords, and seed marker.
+                        </p>
+
+                        <div id="accountsArea">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        window.APP_LANG = '{{ lang }}';
+        localStorage.setItem('language', '{{ lang }}');
+    </script>
+    <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script>
+        async function loadQaAccounts() {
+            const area = document.getElementById('accountsArea');
+
+            try {
+                const response = await fetch('/admin/api/qa-accounts', {
+                    headers: auth.getAuthHeaders()
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load QA accounts');
+                }
+
+                const data = await response.json();
+                const accounts = data.accounts || [];
+
+                if (!accounts.length) {
+                    area.innerHTML = '<p>No QA accounts found.</p>';
+                    return;
+                }
+
+                area.innerHTML = `
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Role</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Password</th>
+                                    <th>Title</th>
+                                    <th>Marker</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${accounts.map(account => `
+                                    <tr>
+                                        <td><strong>${account.role}</strong></td>
+                                        <td>${account.full_name}</td>
+                                        <td>${account.email}</td>
+                                        <td><code>${account.password}</code></td>
+                                        <td>${account.title || '-'}</td>
+                                        <td>${account.seed_marker || '-'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (error) {
+                area.innerHTML = `<div class="alert alert-error">${error.message}</div>`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            i18n.setLanguage(window.APP_LANG);
+            i18n.updatePageTexts();
+            await requireAdmin();
+            await loadQaAccounts();
+
+            document.getElementById('logoutBtn').addEventListener('click', async () => {
+                await auth.logout();
+                window.location.href = '/';
+            });
+        });
+    </script>
+</body>
+</html>

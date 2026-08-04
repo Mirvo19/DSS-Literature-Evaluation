@@ -118,6 +118,46 @@ class AdminPanel {
             throw error;
         }
     }
+
+    async seedDatabase() {
+        try {
+            const response = await fetch('/admin/api/seed', {
+                method: 'POST',
+                headers: auth.getAuthHeaders()
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || 'Failed to seed database');
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Error seeding database:', error);
+            throw error;
+        }
+    }
+
+    async unseedDatabase() {
+        try {
+            const response = await fetch('/admin/api/unseed', {
+                method: 'POST',
+                headers: auth.getAuthHeaders()
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || 'Failed to unseed database');
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Error unseeding database:', error);
+            throw error;
+        }
+    }
     
     // sessions
     

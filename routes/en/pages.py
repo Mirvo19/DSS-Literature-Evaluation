@@ -72,6 +72,11 @@ def admin_judge_permissions_page():
 def admin_results_page():
     return render_template('admin/results.html', lang=LANG)
 
+@bp.route('/admin/qa-accounts')
+@require_admin
+def admin_qa_accounts_page():
+    return render_template('admin/qa_accounts.html', lang=LANG)
+
 # judge pages
 
 @bp.route('/judge/scoring')

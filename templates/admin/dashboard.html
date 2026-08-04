@@ -71,6 +71,14 @@
                         </div>
                     </a>
 
+                    <!-- QA Accounts Card -->
+                    <a href="/{{ lang }}/admin/qa-accounts" class="card" style="text-decoration: none; color: inherit;">
+                        <div class="card-body text-center">
+                            <h3>QA Accounts</h3>
+                            <p>View QA credentials and roles</p>
+                        </div>
+                    </a>
+
                     <!-- Results & Winners Card -->
                     <a href="/{{ lang }}/admin/results" class="card" style="text-decoration: none; color: inherit;">
                         <div class="card-body text-center">
@@ -89,6 +97,22 @@
                             <a href="/{{ lang }}/admin/students"  class="btn btn-primary" data-i18n="importCSV">Import CSV</a>
                             <a href="/{{ lang }}/admin/weeks"     class="btn btn-primary" data-i18n="createWeek">Create Week</a>
                             <a href="/{{ lang }}/admin/sessions"  class="btn btn-primary" data-i18n="createSession">Create Session</a>
+                            <a href="/{{ lang }}/admin/qa-accounts" class="btn btn-secondary">QA Accounts</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-4" style="border-color: #d4a017;">
+                    <div class="card-header">
+                        <h3 class="card-title">Database Seeding</h3>
+                    </div>
+                    <div class="card-body">
+                        <p style="margin-bottom: 1rem; color: #7a5b00;">
+                            Seed creates QA data for testing. Unseed removes only the QA Seed records.
+                        </p>
+                        <div class="flex gap-2 flex-wrap">
+                            <button id="seedDbBtn" class="btn btn-primary">Seed Database</button>
+                            <button id="unseedDbBtn" class="btn btn-secondary">Unseed Database</button>
                         </div>
                     </div>
                 </div>
@@ -128,6 +152,34 @@
             document.getElementById('logoutBtn').addEventListener('click', async () => {
                 await auth.logout();
                 window.location.href = '/';
+            });
+
+            document.getElementById('seedDbBtn').addEventListener('click', async () => {
+                if (!confirm('Seed the database with QA data? This will create test records.')) return;
+
+                try {
+                    showLoading();
+                    const result = await adminPanel.seedDatabase();
+                    showAlert(result.output || 'Database seeded successfully', 'success');
+                } catch (error) {
+                    showAlert(error.message || 'Failed to seed database', 'error');
+                } finally {
+                    hideLoading();
+                }
+            });
+
+            document.getElementById('unseedDbBtn').addEventListener('click', async () => {
+                if (!confirm('Remove QA seed data from the database? This will delete only seeded records.')) return;
+
+                try {
+                    showLoading();
+                    const result = await adminPanel.unseedDatabase();
+                    showAlert(result.output || 'Database unseeded successfully', 'success');
+                } catch (error) {
+                    showAlert(error.message || 'Failed to unseed database', 'error');
+                } finally {
+                    hideLoading();
+                }
             });
 
             // display user info
