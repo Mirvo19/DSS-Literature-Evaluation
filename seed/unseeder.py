@@ -91,17 +91,16 @@ def main() -> None:
             ids = [row["id"] for row in rows if SEED_MARKER in (row.get(field) or "") or (field == "user_email" and (row.get(field) or "").startswith(SEED_EMAIL_PREFIX))]
         delete_ids(table, ids)
 
-    # Remove admin mapping before deleting auth users.
-    admin_rows = fetch_all("admins")
-    admin_ids = [row["id"] for row in admin_rows if row.get("user_id")]
-    delete_ids("admins", admin_ids)
-
     # Remove seed-created events only if they were created by the seeder.
     event_rows = fetch_all("events")
     event_ids = [row["id"] for row in event_rows if (row.get("description") or "") == f"{SEED_MARKER} event for QA coverage"]
     delete_ids("events", event_ids)
 
     removed_users = seeded_auth_users()
+    admin_rows = fetch_all("admins")
+    admin_ids = [row["id"] for row in admin_rows if row.get("user_id") in {user["id"] for user in removed_users}]
+    delete_ids("admins", admin_ids)
+
     for user in removed_users:
         SUPABASE.auth.admin.delete_user(user["id"])
 
