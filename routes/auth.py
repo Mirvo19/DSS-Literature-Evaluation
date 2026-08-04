@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, make_response
 from supabase import create_client
 from config import Config
-from utils.auth import is_user_admin
+from utils.auth import is_user_admin, supabase_admin
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -143,7 +143,7 @@ def verify_token():
         if token.startswith('Bearer '):
             token = token[7:]
         
-        user = supabase.auth.get_user(token)
+        user = supabase_admin.auth.get_user(token)
         
         if user and user.user:
             is_admin = is_user_admin(user.user.id)

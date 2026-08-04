@@ -10,7 +10,7 @@ supabase_admin = create_client(Config.SUPABASE_URL, Config.SUPABASE_SERVICE_KEY)
 
 def get_user_from_token(token):
     try:
-        user = supabase.auth.get_user(token)
+        user = supabase_admin.auth.get_user(token)
         return user.user if user else None
     except Exception as e:
         print(f"Token verification error: {e}")

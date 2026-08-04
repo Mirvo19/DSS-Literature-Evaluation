@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from supabase import create_client
 from config import Config
-from utils.auth import require_admin
+from utils.auth import require_admin, supabase_admin
 from utils.csv_handler import CSVStudentImporter
 from utils.random_selector import ExtemporeRandomSelector
 from utils.audit_logger import AuditLogger
@@ -929,7 +929,7 @@ def get_admin_email_from_request():
         if auth_header.startswith('Bearer '):
             token = auth_header[7:]
             # get user info
-            user = supabase.auth.get_user(token)
+            user = supabase_admin.auth.get_user(token)
             if user and user.user:
                 return user.user.email, user.user.id
         return 'unknown@admin.com', None
