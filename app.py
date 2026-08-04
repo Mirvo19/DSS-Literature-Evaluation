@@ -1,4 +1,4 @@
-﻿from flask import Flask, render_template, send_from_directory, redirect
+from flask import Flask, render_template, send_from_directory, redirect
 from flask_cors import CORS
 from config import Config
 import os

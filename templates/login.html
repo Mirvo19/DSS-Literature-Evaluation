@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - DSS Talk</title>
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
+
 <body>
     <div class="auth-container">
         <div class="auth-card">
@@ -83,11 +85,11 @@
                 return;
             }
 
-            const langSelect   = document.getElementById('languageSelect');
-            const eventSelect  = document.getElementById('eventSelect');
-            const gradeGroup   = document.getElementById('gradeGroup');
-            const signupLink   = document.getElementById('signupLink');
-            const form         = document.getElementById('loginForm');
+            const langSelect = document.getElementById('languageSelect');
+            const eventSelect = document.getElementById('eventSelect');
+            const gradeGroup = document.getElementById('gradeGroup');
+            const signupLink = document.getElementById('signupLink');
+            const form = document.getElementById('loginForm');
             const errorMessage = document.getElementById('errorMessage');
             const loadingOverlay = document.getElementById('loadingOverlay');
 
@@ -125,11 +127,11 @@
                 e.preventDefault();
                 errorMessage.classList.add('hidden');
 
-                const email    = document.getElementById('email').value;
+                const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
-                const event    = eventSelect.value;
-                const grade    = document.getElementById('gradeSelect').value;
-                const lang     = langSelect.value;
+                const event = eventSelect.value;
+                const grade = document.getElementById('gradeSelect').value;
+                const lang = langSelect.value;
 
                 // save preferences
                 localStorage.setItem('selected_event', event);
@@ -153,4 +155,5 @@
         });
     </script>
 </body>
+
 </html>

@@ -1,22 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up - DSS Talk (English)</title>
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
+
 <body>
     <div class="auth-container">
         <div class="auth-card">
             <!-- back to login -->
-            <a href="/en/login" class="back-link" style="display:inline-block;margin-bottom:1rem;font-size:0.85rem;color:#6c757d;text-decoration:none;">
+            <a href="/en/login" class="back-link"
+                style="display:inline-block;margin-bottom:1rem;font-size:0.85rem;color:#6c757d;text-decoration:none;">
                 ← Back to Login
             </a>
 
             <h1 class="auth-title">Sign Up</h1>
 
-            <div id="errorMessage"   class="alert alert-error   hidden"></div>
+            <div id="errorMessage" class="alert alert-error   hidden"></div>
             <div id="successMessage" class="alert alert-success hidden"></div>
 
             <form id="signupForm">
@@ -29,14 +32,16 @@
                 <!-- Password -->
                 <div class="form-group">
                     <label for="password" class="form-label">Password</label>
-                    <input type="password" id="password" class="form-input" placeholder="Password" required minlength="6">
+                    <input type="password" id="password" class="form-input" placeholder="Password" required
+                        minlength="6">
                     <span class="form-help">Password must be at least 6 characters</span>
                 </div>
 
                 <!-- Confirm Password -->
                 <div class="form-group">
                     <label for="confirmPassword" class="form-label">Confirm Password</label>
-                    <input type="password" id="confirmPassword" class="form-input" placeholder="Confirm Password" required minlength="6">
+                    <input type="password" id="confirmPassword" class="form-input" placeholder="Confirm Password"
+                        required minlength="6">
                     <span id="passwordError" class="form-error hidden">Passwords do not match</span>
                 </div>
 
@@ -66,11 +71,11 @@
         document.addEventListener('DOMContentLoaded', () => {
             i18n.setLanguage('en');
 
-            const password       = document.getElementById('password');
+            const password = document.getElementById('password');
             const confirmPassword = document.getElementById('confirmPassword');
-            const passwordError  = document.getElementById('passwordError');
-            const form           = document.getElementById('signupForm');
-            const errorMessage   = document.getElementById('errorMessage');
+            const passwordError = document.getElementById('passwordError');
+            const form = document.getElementById('signupForm');
+            const errorMessage = document.getElementById('errorMessage');
             const successMessage = document.getElementById('successMessage');
             const loadingOverlay = document.getElementById('loadingOverlay');
 
@@ -128,4 +133,5 @@
         });
     </script>
 </body>
+
 </html>

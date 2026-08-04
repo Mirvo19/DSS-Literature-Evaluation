@@ -1,4 +1,4 @@
-﻿// auth class
+// auth class
 
 class Auth {
     constructor() {
@@ -7,7 +7,7 @@ class Auth {
         this.isAdmin = false; // always verify from server
         localStorage.removeItem('is_admin'); // clear any stale value
     }
-    
+
     async signup(email, password) {
         try {
             const response = await fetch('/auth/signup', {
@@ -17,24 +17,24 @@ class Auth {
                 },
                 body: JSON.stringify({ email, password })
             });
-            
+
             const data = await response.json();
-            
+
             if (!response.ok) {
                 throw new Error(data.error || 'Signup failed');
             }
-            
+
             // save session
             if (data.session && data.session.access_token) {
                 this.setSession(data.session.access_token, data.user, false);
             }
-            
+
             return data;
         } catch (error) {
             throw error;
         }
     }
-    
+
     async login(email, password) {
         try {
             const response = await fetch('/auth/login', {
@@ -44,22 +44,22 @@ class Auth {
                 },
                 body: JSON.stringify({ email, password })
             });
-            
+
             const data = await response.json();
-            
+
             if (!response.ok) {
                 throw new Error(data.error || 'Login failed');
             }
-            
+
             // save session
             this.setSession(data.session.access_token, data.user, data.is_admin);
-            
+
             return data;
         } catch (error) {
             throw error;
         }
     }
-    
+
     async logout() {
         try {
             if (this.token) {
@@ -76,73 +76,73 @@ class Auth {
             this.clearSession();
         }
     }
-    
+
     async verifyToken() {
         if (!this.token) {
             return false;
         }
-        
+
         try {
             const response = await fetch('/auth/verify', {
                 headers: {
                     'Authorization': `Bearer ${this.token}`
                 }
             });
-            
+
             if (!response.ok) {
                 this.clearSession();
                 return false;
             }
-            
+
             const data = await response.json();
             this.user = data.user;
             this.isAdmin = data.is_admin; // from server only
             localStorage.setItem('user', JSON.stringify(data.user));
-            
+
             return true;
         } catch (error) {
             this.clearSession();
             return false;
         }
     }
-    
+
     setSession(token, user, isAdmin) {
         this.token = token;
         this.user = user;
         this.isAdmin = isAdmin;
-        
+
         localStorage.setItem('access_token', token);
         localStorage.setItem('user', JSON.stringify(user));
         // is_admin in memory only
     }
-    
+
     clearSession() {
         this.token = null;
         this.user = null;
         this.isAdmin = false;
-        
+
         localStorage.removeItem('access_token');
         localStorage.removeItem('user');
         localStorage.removeItem('selected_event');
         localStorage.removeItem('selected_grade');
     }
-    
+
     isAuthenticated() {
         return !!this.token;
     }
-    
+
     getToken() {
         return this.token;
     }
-    
+
     getUser() {
         return this.user;
     }
-    
+
     checkAdmin() {
         return this.isAdmin;
     }
-    
+
     getAuthHeaders() {
         return {
             'Content-Type': 'application/json',
@@ -160,13 +160,13 @@ async function requireAuth() {
         window.location.href = '/';
         return false;
     }
-    
+
     const valid = await auth.verifyToken();
     if (!valid) {
         window.location.href = '/';
         return false;
     }
-    
+
     return true;
 }
 
@@ -176,7 +176,7 @@ async function requireAdmin() {
     if (!authenticated) {
         return false;
     }
-    
+
     if (!auth.checkAdmin()) {
         alert(i18n.t('error') + ': Admin access required');
         // redirect to dashboard
@@ -184,7 +184,7 @@ async function requireAdmin() {
         window.location.href = '/' + lang + '/dashboard';
         return false;
     }
-    
+
     return true;
 }
 
@@ -192,13 +192,13 @@ async function requireAdmin() {
 function updateUIForAuth() {
     const isAuth = auth.isAuthenticated();
     const isAdmin = auth.checkAdmin();
-    
+
     // hide admin elements
     document.querySelectorAll('[data-admin-only]').forEach(el => {
         el.hidden = !isAdmin;
         el.style.display = isAdmin ? '' : 'none';
     });
-    
+
     // hide auth elements when logged out
     document.querySelectorAll('[data-auth-required]').forEach(el => {
         el.style.display = isAuth ? '' : 'none';

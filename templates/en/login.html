@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - DSS Talk (English)</title>
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
+
 <body>
     <div class="auth-container">
         <div class="auth-card">
             <!-- back to landing -->
-            <a href="/" class="back-link" style="display:inline-block;margin-bottom:1rem;font-size:0.85rem;color:#6c757d;text-decoration:none;">
+            <a href="/" class="back-link"
+                style="display:inline-block;margin-bottom:1rem;font-size:0.85rem;color:#6c757d;text-decoration:none;">
                 ← Back to language selection
             </a>
 
@@ -80,9 +83,9 @@
             // lock language to English
             i18n.setLanguage('en');
 
-            const eventSelect  = document.getElementById('eventSelect');
-            const gradeGroup   = document.getElementById('gradeGroup');
-            const form         = document.getElementById('loginForm');
+            const eventSelect = document.getElementById('eventSelect');
+            const gradeGroup = document.getElementById('gradeGroup');
+            const form = document.getElementById('loginForm');
             const errorMessage = document.getElementById('errorMessage');
             const loadingOverlay = document.getElementById('loadingOverlay');
 
@@ -111,10 +114,10 @@
                 e.preventDefault();
                 errorMessage.classList.add('hidden');
 
-                const email    = document.getElementById('email').value;
+                const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
-                const event    = eventSelect.value;
-                const grade    = document.getElementById('gradeSelect').value;
+                const event = eventSelect.value;
+                const grade = document.getElementById('gradeSelect').value;
 
                 // save preferences
                 localStorage.setItem('selected_event', event);
@@ -140,4 +143,5 @@
         });
     </script>
 </body>
+
 </html>

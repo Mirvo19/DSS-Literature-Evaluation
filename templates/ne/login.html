@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="ne">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>लगइन - DSS Talk (नेपाली)</title>
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
+
 <body>
     <div class="auth-container">
         <div class="auth-card">
             <!-- back to landing -->
-            <a href="/" class="back-link" style="display:inline-block;margin-bottom:1rem;font-size:0.85rem;color:#6c757d;text-decoration:none;">
+            <a href="/" class="back-link"
+                style="display:inline-block;margin-bottom:1rem;font-size:0.85rem;color:#6c757d;text-decoration:none;">
                 ← भाषा छनौटमा फर्कनुहोस्
             </a>
 
@@ -80,10 +83,10 @@
             // lock language to Nepali
             i18n.setLanguage('ne');
 
-            const eventSelect    = document.getElementById('eventSelect');
-            const gradeGroup     = document.getElementById('gradeGroup');
-            const form           = document.getElementById('loginForm');
-            const errorMessage   = document.getElementById('errorMessage');
+            const eventSelect = document.getElementById('eventSelect');
+            const gradeGroup = document.getElementById('gradeGroup');
+            const form = document.getElementById('loginForm');
+            const errorMessage = document.getElementById('errorMessage');
             const loadingOverlay = document.getElementById('loadingOverlay');
 
             // restore saved event selection
@@ -111,10 +114,10 @@
                 e.preventDefault();
                 errorMessage.classList.add('hidden');
 
-                const email    = document.getElementById('email').value;
+                const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
-                const event    = eventSelect.value;
-                const grade    = document.getElementById('gradeSelect').value;
+                const event = eventSelect.value;
+                const grade = document.getElementById('gradeSelect').value;
 
                 // save preferences
                 localStorage.setItem('selected_event', event);
@@ -140,4 +143,5 @@
         });
     </script>
 </body>
+
 </html>
