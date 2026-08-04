@@ -203,18 +203,18 @@ def seed_students() -> List[Dict[str, Any]]:
 def seed_judges() -> List[Dict[str, Any]]:
     judges = []
     for judge in SEED_JUDGES:
-        judges.append(
-            ensure_row(
-                "judges",
-                {"email": judge["email"]},
-                {
-                    "full_name": judge["full_name"],
-                    "title": judge["title"],
-                    "email": judge["email"],
-                    "is_active": True,
-                },
-            )
+        judge_row = ensure_row(
+            "judges",
+            {"email": judge["email"]},
+            {
+                "full_name": judge["full_name"],
+                "title": judge["title"],
+                "email": judge["email"],
+                "is_active": True,
+            },
         )
+        judge_row["role"] = judge["role"]
+        judges.append(judge_row)
     return judges
 
 
