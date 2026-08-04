@@ -65,6 +65,7 @@
     </script>
     <script src="/static/js/i18n.js"></script>
     <script src="/static/js/auth.js"></script>
+    <script src="/static/js/icons.js"></script>
     <script>
         const weekId = window.location.pathname.split('/').pop();
         
@@ -111,7 +112,7 @@
                 const top3HTML = `
                     <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem;">
                         ${top3.map((result, index) => {
-                            const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
+                            const medal = index === 0 ? AppIcons.medal('gold', 'ui-icon--xl') : index === 1 ? AppIcons.medal('silver', 'ui-icon--xl') : AppIcons.medal('bronze', 'ui-icon--xl');
                             return `
                                 <div style="padding: 1.5rem; border: 2px solid #ddd; border-radius: 8px; text-align: center; min-width: 220px;">
                                     <div style="font-size: 3rem;">${medal}</div>
@@ -157,7 +158,7 @@
                                 
                                 return `
                                     <tr ${isWinner ? 'style="background-color: #fff3cd;"' : ''}>
-                                        <td><strong>${positionDisplay}${isWinner ? ' 👑' : ''}</strong></td>
+                                        <td><strong>${positionDisplay}${isWinner ? AppIcons.crown('ui-icon--sm') : ''}</strong></td>
                                         <td>${result.student_name}</td>
                                         <td>${result.roll_number}</td>
                                         <td>${result.grade}</td>
