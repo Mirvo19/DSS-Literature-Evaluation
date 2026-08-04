@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template
+﻿from flask import Blueprint, render_template
 from utils.auth import require_admin, is_current_request_admin
 
 # nepali page routes
@@ -82,3 +82,4 @@ def admin_qa_accounts_page():
 @bp.route('/judge/scoring')
 def judge_scoring_page():
     return render_template('judge/scoring.html', lang=LANG)
+

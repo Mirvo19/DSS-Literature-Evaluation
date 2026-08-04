@@ -8,14 +8,14 @@
 </head>
 <body>
     <div class="page-wrapper">
-        <!-- Header -->
+        <!-- header -->
         <header class="header">
             <div class="container">
                 <div class="header-content">
                     <a href="/{{ lang }}/dashboard" class="logo">DSS Talk</a>
 
                     <nav class="nav-menu">
-                        <!-- Event Selector -->
+                        <!-- event selector -->
                         <div class="nav-item">
                             <select id="eventSelect" class="form-select">
                                 <option value="debate"       data-i18n="debate">Debate</option>
@@ -24,24 +24,24 @@
                             </select>
                         </div>
 
-                        <!-- Judge Scoring Link (judges only) -->
+                        <!-- judge scoring link (judges only) -->
                         <div class="nav-item" id="judgeScoring" style="display: none;">
                             <a href="/{{ lang }}/judge/scoring" class="nav-link" data-i18n="score">My Scoring</a>
                         </div>
 
-                        <!-- Winners Link -->
+                        <!-- winners link -->
                         <div class="nav-item">
                             <a href="/{{ lang }}/winners" class="nav-link" data-i18n="winners">Winners</a>
                         </div>
 
-                        <!-- Admin Panel Link (admin only) -->
+                        <!-- admin panel link (admin only) -->
                         {% if is_admin %}
                         <div class="nav-item" data-admin-only>
                             <a href="/{{ lang }}/admin/dashboard" class="nav-link" data-i18n="adminPanel">Admin Panel</a>
                         </div>
                         {% endif %}
 
-                        <!-- Logout Button -->
+                        <!-- logout button -->
                         <div class="nav-item">
                             <button id="logoutBtn" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
                         </div>
@@ -50,7 +50,7 @@
             </div>
         </header>
 
-        <!-- Main Content -->
+        <!-- main content -->
         <main class="content-wrapper">
             <div class="container">
                 <div id="contentArea">
@@ -60,7 +60,7 @@
         </main>
     </div>
 
-    <!-- Language is locked to whichever side the user came from -->
+    <!-- language is locked to whichever side the user came from -->
     <script>
         window.APP_LANG = '{{ lang }}';
         localStorage.setItem('language', '{{ lang }}');

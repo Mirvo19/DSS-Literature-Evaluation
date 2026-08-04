@@ -1,4 +1,4 @@
-from functools import wraps
+﻿from functools import wraps
 from flask import request, jsonify, abort
 from supabase import create_client
 from config import Config
@@ -110,3 +110,4 @@ def is_current_request_admin():
         return False
 
     return is_user_admin(user.id)
+

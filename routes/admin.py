@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+﻿from flask import Blueprint, request, jsonify
 from supabase import create_client
 from config import Config
 from utils.auth import require_admin, supabase_admin
@@ -1365,3 +1365,4 @@ def unpublish_winners(week_id):
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
+

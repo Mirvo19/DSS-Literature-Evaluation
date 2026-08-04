@@ -1,4 +1,4 @@
-# audit logging for admin actions
+﻿# audit logging for admin actions
 from supabase import create_client
 from config import Config
 from flask import request
@@ -35,3 +35,4 @@ class AuditLogger:
             return "admin@example.com", None
         except:
             return "unknown", None
+

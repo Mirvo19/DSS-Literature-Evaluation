@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+﻿from flask import Blueprint, request, jsonify
 from supabase import create_client
 from config import Config
 from utils.auth import require_auth
@@ -105,7 +105,7 @@ def get_winners():
         
         weeks_response = query.execute()
         
-        # Filter weeks that have winners
+        # filter weeks that have winners
         weeks_with_winners = []
         for week in weeks_response.data:
             winners_check = supabase.table('participants')\
@@ -147,7 +147,7 @@ def get_week_rankings(week_id):
         
         print(f"Found {len(participants.data)} participants")
         
-        # Get student info and scores for each participant
+        # get student info and scores for each participant
         results = []
         for participant in participants.data:
             print(f"\nProcessing participant: {participant['id']}")
@@ -254,3 +254,4 @@ def get_weeks_by_event(event_id):
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, make_response
+﻿from flask import Blueprint, request, jsonify, make_response
 from supabase import create_client
 from config import Config
 from utils.auth import is_user_admin, supabase_admin
@@ -159,3 +159,4 @@ def verify_token():
             
     except Exception as e:
         return jsonify({'error': f'Verification error: {str(e)}'}), 401
+

@@ -1,4 +1,4 @@
-// auth class
+﻿// auth class
 
 class Auth {
     constructor() {
@@ -209,3 +209,4 @@ function updateUIForAuth() {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { auth, requireAuth, requireAdmin, updateUIForAuth };
 }
+

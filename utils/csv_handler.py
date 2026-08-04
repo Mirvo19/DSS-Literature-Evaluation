@@ -1,4 +1,4 @@
-import csv
+﻿import csv
 import io
 from typing import List, Dict, Tuple
 
@@ -91,3 +91,4 @@ class CSVStudentImporter:
             'errors': errors,
             'success': len(errors) == 0 or imported > 0
         }
+

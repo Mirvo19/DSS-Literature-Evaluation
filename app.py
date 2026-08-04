@@ -1,4 +1,4 @@
-from flask import Flask, render_template, send_from_directory, redirect
+﻿from flask import Flask, render_template, send_from_directory, redirect
 from flask_cors import CORS
 from config import Config
 import os
@@ -40,7 +40,7 @@ def inject_vercel_speed_insights(response):
 
 @app.route('/')
 def root():
-    return redirect('/login')
+    return render_template('index.html')
 
 @app.route('/login')
 def login_page():
@@ -52,3 +52,4 @@ def static_files(filename):
 
 if __name__ == '__main__':
     app.run(debug=(app.config['ENV'] == 'development'), host='0.0.0.0', port=5000)
+

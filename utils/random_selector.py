@@ -1,4 +1,4 @@
-import random
+﻿import random
 from typing import List, Dict, Tuple, Optional
 
 class ExtemporeRandomSelector:
@@ -123,3 +123,4 @@ class ExtemporeRandomSelector:
             })
         
         return participants
+

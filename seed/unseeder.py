@@ -1,7 +1,4 @@
-"""Remove QA seed data from DSS Talk.
-
-This script deletes only rows that were created by seer.py.
-"""
+﻿"""remove qa seed data from dss talk. this script deletes only rows that were created by seer.py."""
 
 from __future__ import annotations
 
@@ -61,7 +58,7 @@ def seeded_auth_users() -> List[Dict[str, Any]]:
 
 
 def main() -> None:
-    # Remove leaf data first.
+    # remove leaf data first.
     judge_score_ids = [row["id"] for row in fetch_all("judge_scores") if SEED_MARKER in (row.get("comments") or "")]
     delete_ids("judge_scores", judge_score_ids)
 
@@ -91,7 +88,7 @@ def main() -> None:
             ids = [row["id"] for row in rows if SEED_MARKER in (row.get(field) or "") or (field == "user_email" and (row.get(field) or "").startswith(SEED_EMAIL_PREFIX))]
         delete_ids(table, ids)
 
-    # Remove seed-created events only if they were created by the seeder.
+    # remove seed-created events only if they were created by the seeder.
     event_rows = fetch_all("events")
     event_ids = [row["id"] for row in event_rows if (row.get("description") or "") == f"{SEED_MARKER} event for QA coverage"]
     delete_ids("events", event_ids)

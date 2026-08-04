@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+﻿from flask import Blueprint, request, jsonify
 from supabase import create_client
 from config import Config
 from functools import wraps
@@ -297,3 +297,4 @@ def get_my_scores():
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
+

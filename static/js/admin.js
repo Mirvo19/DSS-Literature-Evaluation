@@ -1,4 +1,4 @@
-// admin panel
+﻿// admin panel
 
 class AdminPanel {
     constructor() {
@@ -481,3 +481,4 @@ function showAlert(message, type = 'success') {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { adminPanel, showModal, hideModal, showLoading, hideLoading, showAlert };
 }
+

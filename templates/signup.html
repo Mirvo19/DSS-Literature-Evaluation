@@ -60,8 +60,15 @@
     <script>
         // Initialize language
         document.addEventListener('DOMContentLoaded', () => {
+            const lang = localStorage.getItem('language') || 'en';
+
             // Update all texts with current language
             i18n.updatePageTexts();
+
+            const loginLink = document.querySelector('.auth-footer a');
+            if (loginLink) {
+                loginLink.href = '/' + lang + '/login';
+            }
             
             // Form validation
             const password = document.getElementById('password');
@@ -120,7 +127,7 @@
                     
                     // Redirect to login after 2 seconds
                     setTimeout(() => {
-                        window.location.href = '/';
+                        window.location.href = '/' + lang + '/login';
                     }, 2000);
                     
                 } catch (error) {
@@ -133,7 +140,7 @@
             
             // If already logged in, redirect to dashboard
             if (auth.isAuthenticated()) {
-                window.location.href = '/dashboard';
+                window.location.href = '/' + lang + '/dashboard';
             }
         });
     </script>

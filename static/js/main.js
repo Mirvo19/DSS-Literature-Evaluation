@@ -1,4 +1,4 @@
-// main app
+﻿// main app
 
 class App {
     constructor() {
@@ -217,3 +217,4 @@ if (typeof document !== 'undefined') {
         i18n.updatePageTexts();
     });
 }
+
