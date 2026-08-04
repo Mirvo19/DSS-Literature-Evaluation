@@ -100,6 +100,10 @@ const translations = {
         saveSuccess: 'Saved successfully',
         updateSuccess: 'Updated successfully',
 
+        // verification & auth messages
+        checkInboxVerification: 'Signup successful! Please check your inbox for a verification email before logging in.',
+        emailNotVerified: 'Email not verified. Please check your inbox for the verification link.',
+
         // validation
         required: 'This field is required',
         invalidEmail: 'Invalid email address',
@@ -230,6 +234,10 @@ const translations = {
         deleteSuccess: 'सफलतापूर्वक मेटाइयो',
         saveSuccess: 'सफलतापूर्वक सुरक्षित गरियो',
         updateSuccess: 'सफलतापूर्वक अद्यावधिक गरियो',
+
+        // verification & auth messages
+        checkInboxVerification: 'साइन अप सफल भयो! कृपया लगइन गर्नुअघि आफ्नो प्रमाणीकरण ईमेलका लागि इनबक्स हेर्नुहोस्।',
+        emailNotVerified: 'ईमेल प्रमाणित भएको छैन। कृपया प्रमाणीकरण लिङ्कका लागि आफ्नो इनबक्स हेर्नुहोस्।',
 
         // validation
         required: 'यो फिल्ड आवश्यक छ',

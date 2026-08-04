@@ -29,8 +29,11 @@ def signup():
         })
         
         if response.user:
+            requires_verification = not response.session
+            message = 'Signup successful! Please check your inbox for a verification email before logging in.' if requires_verification else 'Signup successful'
             resp_data = {
-                'message': 'Signup successful',
+                'message': message,
+                'requires_verification': requires_verification,
                 'user': {
                     'id': response.user.id,
                     'email': response.user.email
@@ -113,7 +116,10 @@ def login():
             
     except Exception as e:
         error_message = str(e)
-        if 'invalid' in error_message.lower() or 'credentials' in error_message.lower():
+        err_lower = error_message.lower()
+        if 'email not confirmed' in err_lower or 'not confirmed' in err_lower or 'email not verified' in err_lower or 'email_not_confirmed' in err_lower:
+            return jsonify({'error': 'Email not verified. Please check your inbox for the verification link.'}), 400
+        elif 'invalid' in err_lower or 'credentials' in err_lower:
             return jsonify({'error': 'Invalid email or password'}), 401
         return jsonify({'error': f'Login error: {error_message}'}), 400
 

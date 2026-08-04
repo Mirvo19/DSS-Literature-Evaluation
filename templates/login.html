@@ -75,6 +75,7 @@
     </div>
 
     <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/toast.js"></script>
     <script src="/static/js/auth.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -145,7 +146,9 @@
                     // always go to dashboard — admin link is in the nav
                     window.location.href = '/' + lang + '/dashboard';
                 } catch (error) {
-                    errorMessage.textContent = error.message;
+                    const errMsg = error.message || 'Login failed';
+                    Toast.error(errMsg, 'Login Failed', 6000);
+                    errorMessage.textContent = errMsg;
                     errorMessage.classList.remove('hidden');
                     loadingOverlay.classList.add('hidden');
                 }

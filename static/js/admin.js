@@ -1,4 +1,4 @@
-﻿// admin panel
+// admin panel
 
 class AdminPanel {
     constructor() {
@@ -428,6 +428,24 @@ class AdminPanel {
         }
     }
 }
+    
+    async loadCriteria() {
+        try {
+            const response = await fetch('/admin/api/judging-criteria', {
+                headers: auth.getAuthHeaders()
+            });
+            
+            if (!response.ok) throw new Error('Failed to load criteria');
+            
+            const data = await response.json();
+            this.criteria = data.criteria;
+            return this.criteria;
+        } catch (error) {
+            console.error('Error loading criteria:', error);
+            throw error;
+        }
+    }
+}
 
 // global instance
 const adminPanel = new AdminPanel();
@@ -462,6 +480,11 @@ function hideLoading() {
 }
 
 function showAlert(message, type = 'success') {
+    if (window.Toast && typeof window.Toast.show === 'function') {
+        window.Toast.show({ type, message });
+        return;
+    }
+
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${type}`;
     alertDiv.textContent = message;
@@ -481,4 +504,3 @@ function showAlert(message, type = 'success') {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { adminPanel, showModal, hideModal, showLoading, hideLoading, showAlert };
 }
-

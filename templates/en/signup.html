@@ -66,6 +66,7 @@
         localStorage.setItem('language', 'en');
     </script>
     <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/toast.js"></script>
     <script src="/static/js/auth.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -105,7 +106,9 @@
                 successMessage.classList.add('hidden');
 
                 if (!validatePasswords()) {
-                    errorMessage.textContent = 'Passwords do not match';
+                    const errStr = 'Passwords do not match';
+                    Toast.error(errStr);
+                    errorMessage.textContent = errStr;
                     errorMessage.classList.remove('hidden');
                     return;
                 }
@@ -118,14 +121,27 @@
                         password.value
                     );
 
-                    successMessage.textContent = 'Account created! Redirecting to login...';
+                    const verificationMsg = i18n.t('checkInboxVerification');
+
+                    Toast.success(verificationMsg, 'Check Your Inbox', 6000);
+
+                    Toast.queue({
+                        type: 'info',
+                        title: 'Email Verification Needed',
+                        message: verificationMsg,
+                        duration: 7000
+                    });
+
+                    successMessage.textContent = verificationMsg;
                     successMessage.classList.remove('hidden');
 
                     setTimeout(() => {
                         window.location.href = '/en/login';
-                    }, 2000);
+                    }, 2200);
                 } catch (error) {
-                    errorMessage.textContent = error.message;
+                    const errMsg = error.message || 'Signup failed';
+                    Toast.error(errMsg, 'Signup Error');
+                    errorMessage.textContent = errMsg;
                     errorMessage.classList.remove('hidden');
                     loadingOverlay.classList.add('hidden');
                 }

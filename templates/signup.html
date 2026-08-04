@@ -61,6 +61,7 @@
     </div>
 
     <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/toast.js"></script>
     <script src="/static/js/auth.js"></script>
     <script>
         // Initialize language
@@ -111,7 +112,9 @@
 
                 // Validate passwords match
                 if (!validatePasswords()) {
-                    errorMessage.textContent = i18n.t('passwordMismatch');
+                    const errorMsg = i18n.t('passwordMismatch');
+                    Toast.error(errorMsg);
+                    errorMessage.textContent = errorMsg;
                     errorMessage.classList.remove('hidden');
                     return;
                 }
@@ -125,19 +128,32 @@
 
                 try {
                     const result = await auth.signup(email, pwd);
+                    const verificationMsg = i18n.t('checkInboxVerification');
 
-                    // Show success message
-                    successMessage.textContent = 'Account created successfully! Redirecting to login...';
+                    // Show Toast notification immediately
+                    Toast.success(verificationMsg, 'Check Your Inbox', 6000);
+
+                    // Queue toast for login page redirect
+                    Toast.queue({
+                        type: 'info',
+                        title: 'Email Verification',
+                        message: verificationMsg,
+                        duration: 7000
+                    });
+
+                    successMessage.textContent = verificationMsg;
                     successMessage.classList.remove('hidden');
 
-                    // Redirect to login after 2 seconds
+                    // Redirect to login after delay
                     setTimeout(() => {
                         window.location.href = '/' + lang + '/login';
-                    }, 2000);
+                    }, 2200);
 
                 } catch (error) {
-                    // Show error
-                    errorMessage.textContent = error.message;
+                    // Show error toast
+                    const errMsg = error.message || 'Signup failed';
+                    Toast.error(errMsg, 'Signup Error');
+                    errorMessage.textContent = errMsg;
                     errorMessage.classList.remove('hidden');
                     loadingOverlay.classList.add('hidden');
                 }
