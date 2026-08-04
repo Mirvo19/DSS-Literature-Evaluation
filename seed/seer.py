@@ -7,10 +7,16 @@ admin, dashboard, judging, and results flows.
 from __future__ import annotations
 
 import os
+import sys
 from datetime import date, timedelta
 from typing import Any, Dict, List, Optional
+from pathlib import Path
 
 from supabase import create_client
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from config import Config
 
