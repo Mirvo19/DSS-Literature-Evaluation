@@ -35,6 +35,13 @@
                         {% endif %}
 
                         <div class="nav-item">
+                            <select id="languageSelect" class="form-select lang-select" aria-label="Select Language">
+                                <option value="en" {% if lang == 'en' %}selected{% endif %}>English</option>
+                                <option value="ne" {% if lang == 'ne' %}selected{% endif %}>नेपाली</option>
+                            </select>
+                        </div>
+
+                        <div class="nav-item">
                             <button id="logoutBtn" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
                         </div>
                     </nav>
@@ -50,14 +57,22 @@
                         <h2 class="card-title" data-i18n="recentWinners">Recent Winners</h2>
                     </div>
                     <div id="winnersArea">
-                        <div class="spinner"></div>
+                        <div class="skeleton-wrapper">
+                            <table class="skeleton-table">
+                                <thead><tr><th><span class="skeleton skeleton-text short"></span></th><th><span class="skeleton skeleton-text short"></span></th><th><span class="skeleton skeleton-text short"></span></th><th><span class="skeleton skeleton-text short"></span></th></tr></thead>
+                                <tbody>
+                                    <tr><td><span class="skeleton skeleton-text"></span></td><td><span class="skeleton skeleton-text short"></span></td><td><span class="skeleton skeleton-text"></span></td><td><span class="skeleton skeleton-text short"></span></td></tr>
+                                    <tr><td><span class="skeleton skeleton-text"></span></td><td><span class="skeleton skeleton-text short"></span></td><td><span class="skeleton skeleton-text"></span></td><td><span class="skeleton skeleton-text short"></span></td></tr>
+                                    <tr><td><span class="skeleton skeleton-text"></span></td><td><span class="skeleton skeleton-text short"></span></td><td><span class="skeleton skeleton-text"></span></td><td><span class="skeleton skeleton-text short"></span></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </main>
     </div>
     
-    <!-- Language locked to server-provided side -->
     <script>
         window.APP_LANG = '{{ lang }}';
         localStorage.setItem('language', '{{ lang }}');
@@ -69,7 +84,7 @@
         
         async function loadWinners(eventFilter = '') {
             const winnersArea = document.getElementById('winnersArea');
-            winnersArea.innerHTML = '<div class="spinner"></div>';
+            winnersArea.innerHTML = typeof renderSkeletonTable === 'function' ? renderSkeletonTable(5, 5) : '<div class="spinner"></div>';
             
             try {
                 let url = '/api/winners?limit=100';

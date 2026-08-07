@@ -447,17 +447,37 @@ function hideModal(modalId) {
     }
 }
 
-function showLoading() {
-    const overlay = document.getElementById('loadingOverlay');
-    if (overlay) {
-        overlay.classList.remove('hidden');
+let loadingRefCount = 0;
+
+function ensureLoadingOverlay() {
+    let overlay = document.getElementById('loadingOverlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'loadingOverlay';
+        overlay.className = 'loading-overlay hidden';
+        overlay.innerHTML = '<div class="spinner"></div>';
+        document.body.appendChild(overlay);
     }
+    return overlay;
 }
 
-function hideLoading() {
-    const overlay = document.getElementById('loadingOverlay');
-    if (overlay) {
-        overlay.classList.add('hidden');
+function showLoading() {
+    loadingRefCount++;
+    const overlay = ensureLoadingOverlay();
+    overlay.classList.remove('hidden');
+}
+
+function hideLoading(force = false) {
+    if (force) {
+        loadingRefCount = 0;
+    } else {
+        loadingRefCount = Math.max(0, loadingRefCount - 1);
+    }
+    if (loadingRefCount === 0) {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+            overlay.classList.add('hidden');
+        }
     }
 }
 

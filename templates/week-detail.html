@@ -26,6 +26,13 @@
                         {% endif %}
 
                         <div class="nav-item">
+                            <select id="languageSelect" class="form-select lang-select" aria-label="Select Language">
+                                <option value="en" {% if lang == 'en' %}selected{% endif %}>English</option>
+                                <option value="ne" {% if lang == 'ne' %}selected{% endif %}>नेपाली</option>
+                            </select>
+                        </div>
+
+                        <div class="nav-item">
                             <button id="logoutBtn" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
                         </div>
                     </nav>
@@ -37,7 +44,11 @@
         <main class="content-wrapper">
             <div class="container">
                 <div id="weekInfo" class="card">
-                    <div class="spinner"></div>
+                    <div class="skeleton-card">
+                        <span class="skeleton skeleton-title"></span>
+                        <span class="skeleton skeleton-text"></span>
+                        <span class="skeleton skeleton-text short"></span>
+                    </div>
                 </div>
                 
                 <div class="grid grid-cols-3 gap-3">

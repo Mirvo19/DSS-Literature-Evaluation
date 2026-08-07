@@ -29,6 +29,12 @@
                             <span id="judgeEmailDisplay" style="margin-right: 1rem;"></span>
                         </div>
                         <div class="nav-item">
+                            <select id="languageSelect" class="form-select lang-select" aria-label="Select Language">
+                                <option value="en" {% if lang == 'en' %}selected{% endif %}>English</option>
+                                <option value="ne" {% if lang == 'ne' %}selected{% endif %}>नेपाली</option>
+                            </select>
+                        </div>
+                        <div class="nav-item">
                             <button id="logoutBtn" class="btn btn-secondary btn-sm">Logout</button>
                         </div>
                     </nav>
@@ -46,7 +52,14 @@
                     </div>
                     <div class="card-body">
                         <div id="assignmentsArea">
-                            <div class="spinner"></div>
+                            <div class="skeleton-wrapper">
+                                <table class="skeleton-table">
+                                    <thead><tr><th><span class="skeleton skeleton-text short"></span></th><th><span class="skeleton skeleton-text short"></span></th><th><span class="skeleton skeleton-text short"></span></th></tr></thead>
+                                    <tbody>
+                                        <tr><td><span class="skeleton skeleton-text"></span></td><td><span class="skeleton skeleton-text short"></span></td><td><span class="skeleton skeleton-text"></span></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>

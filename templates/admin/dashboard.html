@@ -24,6 +24,13 @@
                         </div>
 
                         <div class="nav-item">
+                            <select id="languageSelect" class="form-select lang-select" aria-label="Select Language">
+                                <option value="en" {% if lang == 'en' %}selected{% endif %}>English</option>
+                                <option value="ne" {% if lang == 'ne' %}selected{% endif %}>नेपाली</option>
+                            </select>
+                        </div>
+
+                        <div class="nav-item">
                             <button id="logoutBtn" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
                         </div>
                     </nav>

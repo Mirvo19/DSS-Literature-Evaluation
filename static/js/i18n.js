@@ -334,16 +334,89 @@ class I18n {
 
         // sync language dropdown
         const langSelect = document.getElementById('languageSelect');
-        if (langSelect) {
+        if (langSelect && langSelect.value !== this.currentLanguage) {
             langSelect.value = this.currentLanguage;
         }
     }
 }
 
+// skeleton generators
+function renderSkeletonTable(rows = 5, cols = 4) {
+    let headerCols = '';
+    for (let c = 0; c < cols; c++) {
+        headerCols += `<th><span class="skeleton skeleton-text short"></span></th>`;
+    }
+    let bodyRows = '';
+    for (let r = 0; r < rows; r++) {
+        let rowCols = '';
+        for (let c = 0; c < cols; c++) {
+            rowCols += `<td><span class="skeleton skeleton-text${c === 0 ? '' : ' short'}"></span></td>`;
+        }
+        bodyRows += `<tr>${rowCols}</tr>`;
+    }
+    return `
+        <div class="skeleton-wrapper">
+            <table class="skeleton-table">
+                <thead><tr>${headerCols}</tr></thead>
+                <tbody>${bodyRows}</tbody>
+            </table>
+        </div>
+    `;
+}
+
+function renderSkeletonCards(count = 3) {
+    let cards = '';
+    for (let i = 0; i < count; i++) {
+        cards += `
+            <div class="skeleton-card">
+                <span class="skeleton skeleton-title"></span>
+                <span class="skeleton skeleton-text"></span>
+                <span class="skeleton skeleton-text short"></span>
+            </div>
+        `;
+    }
+    return `<div class="skeleton-grid">${cards}</div>`;
+}
+
+function renderSkeletonDetails() {
+    return `
+        <div class="skeleton-card">
+            <span class="skeleton skeleton-title"></span>
+            <span class="skeleton skeleton-text"></span>
+            <span class="skeleton skeleton-text"></span>
+            <span class="skeleton skeleton-text short"></span>
+        </div>
+    `;
+}
+
 // global instance
 const i18n = new I18n();
 
+// auto-attach header language switcher listener
+if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+        const langSelect = document.getElementById('languageSelect');
+        if (langSelect) {
+            langSelect.value = i18n.getLanguage();
+            langSelect.addEventListener('change', (e) => {
+                const newLang = e.target.value;
+                i18n.setLanguage(newLang);
+                
+                // If path starts with /en/ or /ne/, route prefix needs updating
+                const pathname = window.location.pathname;
+                const match = pathname.match(/^\/(en|ne)(\/.*)?$/);
+                if (match) {
+                    const rest = match[2] || '';
+                    window.location.href = `/${newLang}${rest}`;
+                } else {
+                    i18n.updatePageTexts();
+                }
+            });
+        }
+    });
+}
+
 // export for testing
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = i18n;
+    module.exports = { i18n, renderSkeletonTable, renderSkeletonCards, renderSkeletonDetails };
 }

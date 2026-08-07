@@ -1,4 +1,4 @@
-﻿// main app
+// main app
 
 class App {
     constructor() {
@@ -72,12 +72,12 @@ class App {
         const contentArea = document.getElementById('contentArea');
         if (!contentArea) return;
         
-        // show loading
-        contentArea.innerHTML = '<div class="spinner"></div>';
-        
+        // show skeleton screen according to selected event view
         if (this.selectedEvent === 'extempore') {
+            contentArea.innerHTML = typeof renderSkeletonCards === 'function' ? renderSkeletonCards(3) : '<div class="spinner"></div>';
             await this.loadExtemporeWeeks();
         } else {
+            contentArea.innerHTML = typeof renderSkeletonTable === 'function' ? renderSkeletonTable(5, 5) : '<div class="spinner"></div>';
             await this.loadRecentWinners();
         }
     }
@@ -217,4 +217,3 @@ if (typeof document !== 'undefined') {
         i18n.updatePageTexts();
     });
 }
-
