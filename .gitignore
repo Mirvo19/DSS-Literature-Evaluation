@@ -44,6 +44,7 @@ SQL/fix_*.sql
 SQL/add_*.sql
 SQL/update_*.sql
 SQL/debug_*.py
+SQL/migration_separate_grades.sql
 
 # Documentation (keep only README.md and MASTER.md)
 *.md
