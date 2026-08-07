@@ -8,18 +8,18 @@ class AdminPanel {
         this.judges = [];
         this.criteria = [];
     }
-    
+
     async initialize() {
         // verify admin access
         const isAdmin = await requireAdmin();
         if (!isAdmin) return;
-        
+
         updateUIForAuth();
-        
+
         // load initial data
         await this.loadEvents();
     }
-    
+
     async loadEvents() {
         try {
             const response = await fetch('/api/events');
@@ -29,17 +29,17 @@ class AdminPanel {
             console.error('Failed to load events:', error);
         }
     }
-    
+
     // students
-    
+
     async loadStudents() {
         try {
             const response = await fetch('/admin/api/students', {
                 headers: auth.getAuthHeaders()
             });
-            
+
             if (!response.ok) throw new Error('Failed to load students');
-            
+
             const data = await response.json();
             this.students = data.students;
             return this.students;
@@ -48,7 +48,7 @@ class AdminPanel {
             throw error;
         }
     }
-    
+
     async createStudent(studentData) {
         try {
             const response = await fetch('/admin/api/students', {
@@ -56,9 +56,9 @@ class AdminPanel {
                 headers: auth.getAuthHeaders(),
                 body: JSON.stringify(studentData)
             });
-            
+
             if (!response.ok) throw new Error('Failed to create student');
-            
+
             const data = await response.json();
             return data.student;
         } catch (error) {
@@ -66,7 +66,7 @@ class AdminPanel {
             throw error;
         }
     }
-    
+
     async updateStudent(studentId, studentData) {
         try {
             const response = await fetch(`/admin/api/students/${studentId}`, {
@@ -74,9 +74,9 @@ class AdminPanel {
                 headers: auth.getAuthHeaders(),
                 body: JSON.stringify(studentData)
             });
-            
+
             if (!response.ok) throw new Error('Failed to update student');
-            
+
             const data = await response.json();
             return data.student;
         } catch (error) {
@@ -84,23 +84,23 @@ class AdminPanel {
             throw error;
         }
     }
-    
+
     async deleteStudent(studentId) {
         try {
             const response = await fetch(`/admin/api/students/${studentId}`, {
                 method: 'DELETE',
                 headers: auth.getAuthHeaders()
             });
-            
+
             if (!response.ok) throw new Error('Failed to delete student');
-            
+
             return true;
         } catch (error) {
             console.error('Error deleting student:', error);
             throw error;
         }
     }
-    
+
     async importCSV(csvContent) {
         try {
             const response = await fetch('/admin/api/import-csv', {
@@ -108,9 +108,9 @@ class AdminPanel {
                 headers: auth.getAuthHeaders(),
                 body: JSON.stringify({ csv_content: csvContent })
             });
-            
+
             if (!response.ok) throw new Error('Failed to import CSV');
-            
+
             const data = await response.json();
             return data;
         } catch (error) {
@@ -158,9 +158,9 @@ class AdminPanel {
             throw error;
         }
     }
-    
+
     // sessions
-    
+
     async loadSessions() {
         try {
             // filter by language
@@ -168,9 +168,9 @@ class AdminPanel {
             const response = await fetch(`/admin/api/sessions?lang=${lang}`, {
                 headers: auth.getAuthHeaders()
             });
-            
+
             if (!response.ok) throw new Error('Failed to load sessions');
-            
+
             const data = await response.json();
             this.sessions = data.sessions;
             return this.sessions;
@@ -179,7 +179,7 @@ class AdminPanel {
             throw error;
         }
     }
-    
+
     async createSession(sessionData) {
         try {
             const response = await fetch('/admin/api/sessions', {
@@ -187,9 +187,9 @@ class AdminPanel {
                 headers: auth.getAuthHeaders(),
                 body: JSON.stringify(sessionData)
             });
-            
+
             if (!response.ok) throw new Error('Failed to create session');
-            
+
             const data = await response.json();
             return data.session;
         } catch (error) {
@@ -197,7 +197,7 @@ class AdminPanel {
             throw error;
         }
     }
-    
+
     async updateSession(sessionId, sessionData) {
         try {
             const response = await fetch(`/admin/api/sessions/${sessionId}`, {
@@ -205,9 +205,9 @@ class AdminPanel {
                 headers: auth.getAuthHeaders(),
                 body: JSON.stringify(sessionData)
             });
-            
+
             if (!response.ok) throw new Error('Failed to update session');
-            
+
             const data = await response.json();
             return data.session;
         } catch (error) {
@@ -215,49 +215,49 @@ class AdminPanel {
             throw error;
         }
     }
-    
+
     async deleteSession(sessionId) {
         try {
             const response = await fetch(`/admin/api/sessions/${sessionId}`, {
                 method: 'DELETE',
                 headers: auth.getAuthHeaders()
             });
-            
+
             if (!response.ok) throw new Error('Failed to delete session');
-            
+
             return true;
         } catch (error) {
             console.error('Error deleting session:', error);
             throw error;
         }
     }
-    
+
     async resetSessionSpeakers(sessionId) {
         try {
             const response = await fetch(`/admin/api/sessions/${sessionId}/reset-speakers`, {
                 method: 'POST',
                 headers: auth.getAuthHeaders()
             });
-            
+
             if (!response.ok) throw new Error('Failed to reset speakers');
-            
+
             return true;
         } catch (error) {
             console.error('Error resetting speakers:', error);
             throw error;
         }
     }
-    
+
     // weeks
-    
+
     async loadWeeks() {
         try {
             const response = await fetch('/admin/api/weeks', {
                 headers: auth.getAuthHeaders()
             });
-            
+
             if (!response.ok) throw new Error('Failed to load weeks');
-            
+
             const data = await response.json();
             return data.weeks;
         } catch (error) {
@@ -265,7 +265,7 @@ class AdminPanel {
             throw error;
         }
     }
-    
+
     async createWeek(weekData) {
         try {
             const response = await fetch('/admin/api/weeks', {
@@ -273,9 +273,9 @@ class AdminPanel {
                 headers: auth.getAuthHeaders(),
                 body: JSON.stringify(weekData)
             });
-            
+
             if (!response.ok) throw new Error('Failed to create week');
-            
+
             const data = await response.json();
             return data;
         } catch (error) {
@@ -283,7 +283,7 @@ class AdminPanel {
             throw error;
         }
     }
-    
+
     async updateWeek(weekId, weekData) {
         try {
             const response = await fetch(`/admin/api/weeks/${weekId}`, {
@@ -291,9 +291,9 @@ class AdminPanel {
                 headers: auth.getAuthHeaders(),
                 body: JSON.stringify(weekData)
             });
-            
+
             if (!response.ok) throw new Error('Failed to update week');
-            
+
             const data = await response.json();
             return data.week;
         } catch (error) {
@@ -301,25 +301,25 @@ class AdminPanel {
             throw error;
         }
     }
-    
+
     async deleteWeek(weekId) {
         try {
             const response = await fetch(`/admin/api/weeks/${weekId}`, {
                 method: 'DELETE',
                 headers: auth.getAuthHeaders()
             });
-            
+
             if (!response.ok) throw new Error('Failed to delete week');
-            
+
             return true;
         } catch (error) {
             console.error('Error deleting week:', error);
             throw error;
         }
     }
-    
+
     // participants
-    
+
     async updateParticipant(participantId, participantData) {
         try {
             const response = await fetch(`/admin/api/participants/${participantId}`, {
@@ -327,9 +327,9 @@ class AdminPanel {
                 headers: auth.getAuthHeaders(),
                 body: JSON.stringify(participantData)
             });
-            
+
             if (!response.ok) throw new Error('Failed to update participant');
-            
+
             const data = await response.json();
             return data.participant;
         } catch (error) {
@@ -337,7 +337,7 @@ class AdminPanel {
             throw error;
         }
     }
-    
+
     async addParticipant(participantData) {
         try {
             const response = await fetch('/admin/api/participants', {
@@ -345,9 +345,9 @@ class AdminPanel {
                 headers: auth.getAuthHeaders(),
                 body: JSON.stringify(participantData)
             });
-            
+
             if (!response.ok) throw new Error('Failed to add participant');
-            
+
             const data = await response.json();
             return data.participant;
         } catch (error) {
@@ -355,33 +355,33 @@ class AdminPanel {
             throw error;
         }
     }
-    
+
     async removeParticipant(participantId) {
         try {
             const response = await fetch(`/admin/api/participants/${participantId}`, {
                 method: 'DELETE',
                 headers: auth.getAuthHeaders()
             });
-            
+
             if (!response.ok) throw new Error('Failed to remove participant');
-            
+
             return true;
         } catch (error) {
             console.error('Error removing participant:', error);
             throw error;
         }
     }
-    
+
     // judges
-    
+
     async loadJudges() {
         try {
             const response = await fetch('/admin/api/judges', {
                 headers: auth.getAuthHeaders()
             });
-            
+
             if (!response.ok) throw new Error('Failed to load judges');
-            
+
             const data = await response.json();
             this.judges = data.judges;
             return this.judges;
@@ -390,7 +390,7 @@ class AdminPanel {
             throw error;
         }
     }
-    
+
     async createJudge(judgeData) {
         try {
             const response = await fetch('/admin/api/judges', {
@@ -398,9 +398,9 @@ class AdminPanel {
                 headers: auth.getAuthHeaders(),
                 body: JSON.stringify(judgeData)
             });
-            
+
             if (!response.ok) throw new Error('Failed to create judge');
-            
+
             const data = await response.json();
             return data.judge;
         } catch (error) {
@@ -408,35 +408,17 @@ class AdminPanel {
             throw error;
         }
     }
-    
+
     // criteria
-    
+
     async loadCriteria() {
         try {
             const response = await fetch('/admin/api/judging-criteria', {
                 headers: auth.getAuthHeaders()
             });
-            
+
             if (!response.ok) throw new Error('Failed to load criteria');
-            
-            const data = await response.json();
-            this.criteria = data.criteria;
-            return this.criteria;
-        } catch (error) {
-            console.error('Error loading criteria:', error);
-            throw error;
-        }
-    }
-}
-    
-    async loadCriteria() {
-        try {
-            const response = await fetch('/admin/api/judging-criteria', {
-                headers: auth.getAuthHeaders()
-            });
-            
-            if (!response.ok) throw new Error('Failed to load criteria');
-            
+
             const data = await response.json();
             this.criteria = data.criteria;
             return this.criteria;
@@ -492,9 +474,9 @@ function showAlert(message, type = 'success') {
     alertDiv.style.top = '20px';
     alertDiv.style.right = '20px';
     alertDiv.style.zIndex = '10000';
-    
+
     document.body.appendChild(alertDiv);
-    
+
     setTimeout(() => {
         alertDiv.remove();
     }, 3000);
