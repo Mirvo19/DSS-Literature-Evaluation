@@ -1,4 +1,4 @@
-﻿from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify
 from supabase import create_client
 from config import Config
 from utils.auth import require_auth
@@ -22,16 +22,23 @@ def get_events():
 @require_auth
 def get_sessions(event_id):
     try:
-        # filter by language
+        # filter by language and grade
         language = request.args.get('lang', 'en')
+        grade = request.args.get('grade')
         
         query = supabase.table('sessions')\
             .select('*')\
             .eq('event_id', event_id)\
             .eq('is_active', True)\
-            .eq('language', language)\
-            .order('session_number', desc=True)
+            .eq('language', language)
         
+        if grade:
+            try:
+                query = query.eq('grade', int(grade))
+            except (ValueError, TypeError):
+                pass
+                
+        query = query.order('session_number', desc=True)
         response = query.execute()
         
         return jsonify({'sessions': response.data}), 200
@@ -43,7 +50,7 @@ def get_sessions(event_id):
 def get_weeks(session_id):
     try:
         response = supabase.table('weeks')\
-            .select('*, sessions!inner(event_id, session_number)')\
+            .select('*, sessions!inner(event_id, session_number, grade)')\
             .eq('session_id', session_id)\
             .order('week_number', desc=True)\
             .execute()
@@ -57,7 +64,7 @@ def get_weeks(session_id):
 def get_week_detail(week_id):
     try:
         week_response = supabase.table('weeks')\
-            .select('*, sessions!inner(session_number, name, event_id, events!inner(name, name_nepali))')\
+            .select('*, sessions!inner(session_number, name, event_id, grade, language, events!inner(name, name_nepali))')\
             .eq('id', week_id)\
             .single()\
             .execute()
@@ -92,16 +99,23 @@ def get_week_detail(week_id):
 def get_winners():
     try:
         event_id = request.args.get('event_id')
+        grade = request.args.get('grade')
         limit = request.args.get('limit', 50)
         
         # get weeks with winners
         query = supabase.table('weeks')\
-            .select('id, week_number, topic, topic_nepali, date, sessions!inner(session_number, event_id, events!inner(name, name_nepali))')\
+            .select('id, week_number, topic, topic_nepali, date, sessions!inner(session_number, event_id, grade, language, events!inner(name, name_nepali))')\
             .order('date', desc=True)\
             .limit(limit)
         
         if event_id:
             query = query.eq('sessions.event_id', event_id)
+            
+        if grade:
+            try:
+                query = query.eq('sessions.grade', int(grade))
+            except (ValueError, TypeError):
+                pass
         
         weeks_response = query.execute()
         
@@ -123,6 +137,8 @@ def get_winners():
         print(f"Error in get_winners: {e}")
         import traceback
         traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
         return jsonify({'error': str(e)}), 500
 
 @api_bp.route('/week-rankings/<week_id>', methods=['GET'])
@@ -220,38 +236,4 @@ def get_week_rankings(week_id):
         }), 200
         
     except Exception as e:
-        print(f"Error in get_week_rankings: {e}")
-        import traceback
-        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
-
-@api_bp.route('/weeks-by-event/<event_id>', methods=['GET'])
-@require_auth
-def get_weeks_by_event(event_id):
-    try:
-        # filter by language
-        language = request.args.get('lang', 'en')
-        
-        sessions_response = supabase.table('sessions')\
-            .select('id')\
-            .eq('event_id', event_id)\
-            .eq('is_active', True)\
-            .eq('language', language)\
-            .execute()
-        
-        if not sessions_response.data:
-            return jsonify({'weeks': []}), 200
-        
-        session_ids = [s['id'] for s in sessions_response.data]
-        
-        weeks_response = supabase.table('weeks')\
-            .select('*, sessions!inner(session_number, name)')\
-            .in_('session_id', session_ids)\
-            .order('date', desc=True)\
-            .execute()
-        
-        return jsonify({'weeks': weeks_response.data}), 200
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-

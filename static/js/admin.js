@@ -34,7 +34,8 @@ class AdminPanel {
 
     async loadStudents() {
         try {
-            const response = await fetch('/admin/api/students', {
+            const grade = localStorage.getItem('selected_grade') || '11';
+            const response = await fetch(`/admin/api/students?grade=${grade}`, {
                 headers: auth.getAuthHeaders()
             });
 
@@ -163,9 +164,10 @@ class AdminPanel {
 
     async loadSessions() {
         try {
-            // filter by language
+            // filter by language and grade
             const lang = window.APP_LANG || localStorage.getItem('language') || 'en';
-            const response = await fetch(`/admin/api/sessions?lang=${lang}`, {
+            const grade = localStorage.getItem('selected_grade') || '11';
+            const response = await fetch(`/admin/api/sessions?lang=${lang}&grade=${grade}`, {
                 headers: auth.getAuthHeaders()
             });
 

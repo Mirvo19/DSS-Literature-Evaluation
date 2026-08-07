@@ -238,35 +238,37 @@ def seed_sessions_and_weeks(events: List[Dict[str, Any]]) -> List[Dict[str, Any]
     for event_index, event in enumerate(events):
         event_name = event["name"]
         for language_index, language in enumerate(("en", "ne")):
-            session = ensure_row(
-                "sessions",
-                {"event_id": event["id"], "session_number": 1, "language": language},
-                {
-                    "event_id": event["id"],
-                    "name": f"{SEED_MARKER} {event_name} Session {language.upper()}",
-                    "session_number": 1,
-                    "language": language,
-                    "start_date": str(base_day + timedelta(days=event_index * 14 + language_index * 7)),
-                    "end_date": str(base_day + timedelta(days=event_index * 14 + language_index * 7 + 1)),
-                    "is_active": True,
-                },
-            )
+            for grade in (11, 12):
+                session = ensure_row(
+                    "sessions",
+                    {"event_id": event["id"], "session_number": 1, "language": language, "grade": grade},
+                    {
+                        "event_id": event["id"],
+                        "name": f"{SEED_MARKER} {event_name} Grade {grade} Session {language.upper()}",
+                        "session_number": 1,
+                        "language": language,
+                        "grade": grade,
+                        "start_date": str(base_day + timedelta(days=event_index * 14 + language_index * 7)),
+                        "end_date": str(base_day + timedelta(days=event_index * 14 + language_index * 7 + 1)),
+                        "is_active": True,
+                    },
+                )
 
-            week = ensure_row(
-                "weeks",
-                {"session_id": session["id"], "week_number": 1},
-                {
-                    "session_id": session["id"],
-                    "week_number": 1,
-                    "topic": f"{SEED_MARKER} {event_name} topic ({language.upper()})",
-                    "topic_nepali": f"{SEED_MARKER} {event_name} विषय ({language.upper()})",
-                    "date": str(base_day + timedelta(days=event_index * 14 + language_index * 7)),
-                    "is_partial": False,
-                    "notes": f"{SEED_MARKER} week for QA",
-                },
-            )
+                week = ensure_row(
+                    "weeks",
+                    {"session_id": session["id"], "week_number": 1},
+                    {
+                        "session_id": session["id"],
+                        "week_number": 1,
+                        "topic": f"{SEED_MARKER} {event_name} Grade {grade} topic ({language.upper()})",
+                        "topic_nepali": f"{SEED_MARKER} {event_name} कक्षा {grade} विषय ({language.upper()})",
+                        "date": str(base_day + timedelta(days=event_index * 14 + language_index * 7)),
+                        "is_partial": False,
+                        "notes": f"{SEED_MARKER} week for Grade {grade} QA",
+                    },
+                )
 
-            seeded_weeks.append({"event": event, "session": session, "week": week, "language": language})
+                seeded_weeks.append({"event": event, "session": session, "week": week, "language": language, "grade": grade})
 
     return seeded_weeks
 

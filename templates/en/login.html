@@ -32,12 +32,12 @@
                     </select>
                 </div>
 
-                <!-- Grade Selector (for Extempore only) -->
-                <div id="gradeGroup" class="form-group hidden">
-                    <label for="gradeSelect" class="form-label">Select Grade</label>
-                    <select id="gradeSelect" class="form-select">
-                        <option value="11">Grade 11</option>
-                        <option value="12">Grade 12</option>
+                <!-- Grade Selector -->
+                <div id="gradeGroup" class="form-group">
+                    <label for="gradeSelect" class="form-label">Select App Grade</label>
+                    <select id="gradeSelect" class="form-select" required>
+                        <option value="11">Grade 11 App</option>
+                        <option value="12">Grade 12 App</option>
                     </select>
                 </div>
 
@@ -85,30 +85,17 @@
             i18n.setLanguage('en');
 
             const eventSelect = document.getElementById('eventSelect');
-            const gradeGroup = document.getElementById('gradeGroup');
+            const gradeSelect = document.getElementById('gradeSelect');
             const form = document.getElementById('loginForm');
             const errorMessage = document.getElementById('errorMessage');
             const loadingOverlay = document.getElementById('loadingOverlay');
 
-            // restore saved event selection
+            // restore saved selections
             const savedEvent = localStorage.getItem('selected_event');
-            if (savedEvent) {
-                eventSelect.value = savedEvent;
-                if (savedEvent === 'extempore') {
-                    gradeGroup.classList.remove('hidden');
-                    const savedGrade = localStorage.getItem('selected_grade');
-                    if (savedGrade) document.getElementById('gradeSelect').value = savedGrade;
-                }
-            }
+            if (savedEvent) eventSelect.value = savedEvent;
 
-            // show/hide grade selector
-            eventSelect.addEventListener('change', (e) => {
-                if (e.target.value === 'extempore') {
-                    gradeGroup.classList.remove('hidden');
-                } else {
-                    gradeGroup.classList.add('hidden');
-                }
-            });
+            const savedGrade = localStorage.getItem('selected_grade') || '11';
+            gradeSelect.value = savedGrade;
 
             // form submission
             form.addEventListener('submit', async (e) => {
@@ -118,11 +105,11 @@
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
                 const event = eventSelect.value;
-                const grade = document.getElementById('gradeSelect').value;
+                const grade = gradeSelect.value;
 
                 // save preferences
                 localStorage.setItem('selected_event', event);
-                if (event === 'extempore') localStorage.setItem('selected_grade', grade);
+                localStorage.setItem('selected_grade', grade);
 
                 loadingOverlay.classList.remove('hidden');
 

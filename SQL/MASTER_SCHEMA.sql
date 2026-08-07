@@ -48,19 +48,23 @@ CREATE TABLE sessions (
     -- language: 'en' = English side, 'ne' = Nepali side
     -- isolates the two language experiences at the data layer
     language VARCHAR(2) NOT NULL DEFAULT 'en' CHECK (language IN ('en', 'ne')),
+    -- grade: 11 = Grade 11 App, 12 = Grade 12 App
+    -- completely separates sessions/events between Grade 11 and Grade 12 apps
+    grade INTEGER NOT NULL DEFAULT 11 CHECK (grade IN (11, 12)),
     start_date DATE,
     end_date DATE,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_event FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
-    -- unique per event + session number + language so EN and NE can share numbers
-    CONSTRAINT unique_event_session_language UNIQUE (event_id, session_number, language)
+    -- unique per event + session number + language + grade so Grade 11 and 12 can share session numbers
+    CONSTRAINT unique_event_session_lang_grade UNIQUE (event_id, session_number, language, grade)
 );
 
 CREATE INDEX idx_sessions_event_id ON sessions(event_id);
 CREATE INDEX idx_sessions_active ON sessions(is_active);
 CREATE INDEX idx_sessions_language ON sessions(language);
+CREATE INDEX idx_sessions_grade ON sessions(grade);
 
 -- STUDENTS TABLE
 CREATE TABLE students (
@@ -416,13 +420,14 @@ WITH CHECK (true);
 -- VIEWS
 -- =============================================================================
 
--- View for recent winners (exposes session_language for per-language filtering)
+-- View for recent winners (exposes session_language and grade for per-language and per-grade filtering)
 CREATE OR REPLACE VIEW recent_winners AS
 SELECT
     p.id,
     p.week_id,
     p.student_id,
     s.full_name,
+    s.grade         AS student_grade,
     p.score,
     p.position,
     w.week_number,
@@ -431,6 +436,7 @@ SELECT
     w.topic_nepali,
     sess.session_number,
     sess.language   AS session_language,
+    sess.grade      AS grade,
     e.name          AS event_name,
     e.name_nepali   AS event_name_nepali
 FROM participants p
@@ -441,7 +447,7 @@ JOIN events e      ON sess.event_id = e.id
 WHERE p.is_winner = true
 ORDER BY w.date DESC, p.position ASC;
 
--- View for week details with counts (exposes session_language for per-language filtering)
+-- View for week details with counts (exposes session_language and grade for per-language and per-grade filtering)
 CREATE OR REPLACE VIEW week_details AS
 SELECT
     w.id,
@@ -454,6 +460,7 @@ SELECT
     sess.session_number,
     sess.name        AS session_name,
     sess.language    AS session_language,
+    sess.grade       AS grade,
     e.id             AS event_id,
     e.name           AS event_name,
     e.name_nepali    AS event_name_nepali,
@@ -469,7 +476,7 @@ LEFT JOIN week_criteria wc ON w.id = wc.week_id
 GROUP BY
     w.id, w.session_id, w.week_number, w.topic, w.topic_nepali,
     w.date, w.is_partial,
-    sess.session_number, sess.name, sess.language,
+    sess.session_number, sess.name, sess.language, sess.grade,
     e.id, e.name, e.name_nepali;
 
 -- =============================================================================

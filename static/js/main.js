@@ -57,6 +57,17 @@ class App {
                 await this.loadContent();
             });
         }
+
+        // render or update grade badge in nav
+        const userNav = document.querySelector('.user-nav') || document.querySelector('.nav-right') || document.querySelector('.navbar');
+        if (userNav && !document.getElementById('gradeBadge')) {
+            const badge = document.createElement('span');
+            badge.id = 'gradeBadge';
+            badge.className = 'badge';
+            badge.style.cssText = 'background: #4f46e5; color: white; padding: 5px 12px; border-radius: 16px; font-weight: 700; font-size: 0.85rem; margin-right: 10px; display: inline-flex; align-items: center; gap: 4px;';
+            badge.innerHTML = `🎓 Grade ${this.selectedGrade} App`;
+            userNav.insertBefore(badge, userNav.firstChild);
+        }
         
         // logout button
         const logoutBtn = document.getElementById('logoutBtn');
@@ -87,7 +98,7 @@ class App {
         
         try {
             const lang = window.APP_LANG || i18n.getLanguage();
-            const response = await fetch(`/api/weeks-by-event/${this.currentEventId}?lang=${lang}`, {
+            const response = await fetch(`/api/weeks-by-event/${this.currentEventId}?lang=${lang}&grade=${this.selectedGrade}`, {
                 headers: auth.getAuthHeaders()
             });
             
@@ -132,11 +143,11 @@ class App {
         const contentArea = document.getElementById('contentArea');
         
         try {
-            console.log('Loading winners for event:', this.currentEventId);
+            console.log('Loading winners for event:', this.currentEventId, 'grade:', this.selectedGrade);
             
             const url = this.currentEventId 
-                ? `/api/winners?event_id=${this.currentEventId}`
-                : '/api/winners';
+                ? `/api/winners?event_id=${this.currentEventId}&grade=${this.selectedGrade}`
+                : `/api/winners?grade=${this.selectedGrade}`;
                 
             const response = await fetch(url);
             

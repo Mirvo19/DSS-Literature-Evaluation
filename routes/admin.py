@@ -1,4 +1,4 @@
-﻿from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify
 from supabase import create_client
 from config import Config
 from utils.auth import require_admin, supabase_admin
@@ -87,10 +87,16 @@ def get_qa_accounts():
 @require_admin
 def get_all_students():
     try:
-        response = supabase.table('students')\
-            .select('*')\
-            .order('full_name')\
-            .execute()
+        grade = request.args.get('grade')
+        query = supabase.table('students').select('*')
+        
+        if grade:
+            try:
+                query = query.eq('grade', int(grade))
+            except (ValueError, TypeError):
+                pass
+                
+        response = query.order('full_name').execute()
         
         return jsonify({'students': response.data}), 200
     except Exception as e:
@@ -252,6 +258,7 @@ def import_students_csv():
 def get_all_sessions():
     try:
         language = request.args.get('lang')
+        grade = request.args.get('grade')
         
         query = supabase.table('sessions')\
             .select('*, events!inner(name, name_nepali)')\
@@ -260,6 +267,12 @@ def get_all_sessions():
         # filter by language
         if language in ('en', 'ne'):
             query = query.eq('language', language)
+            
+        if grade:
+            try:
+                query = query.eq('grade', int(grade))
+            except (ValueError, TypeError):
+                pass
         
         response = query.execute()
         
@@ -280,12 +293,17 @@ def create_session():
         language = data.get('language', 'en')
         if language not in ('en', 'ne'):
             return jsonify({'error': 'language must be en or ne'}), 400
+            
+        grade = int(data.get('grade', 11))
+        if grade not in (11, 12):
+            return jsonify({'error': 'grade must be 11 or 12'}), 400
         
         response = supabase.table('sessions').insert({
             'event_id': data['event_id'],
             'name': data['name'],
             'session_number': data.get('session_number', 1),
             'language': language,
+            'grade': grade,
             'start_date': data.get('start_date'),
             'end_date': data.get('end_date'),
             'is_active': data.get('is_active', True)
@@ -302,7 +320,7 @@ def update_session(session_id):
         data = request.json
         
         update_data = {}
-        for field in ['name', 'session_number', 'start_date', 'end_date', 'is_active']:
+        for field in ['name', 'session_number', 'grade', 'start_date', 'end_date', 'is_active']:
             if field in data:
                 update_data[field] = data[field]
         
@@ -325,20 +343,6 @@ def delete_session(session_id):
         return jsonify({'error': str(e)}), 500
 
 # week management
-
-@bp.route('/api/weeks', methods=['GET'])
-@require_admin
-def get_all_weeks():
-    try:
-        response = supabase.table('weeks')\
-            .select('*, sessions!inner(session_number, name, events!inner(name))')\
-            .order('created_at', desc=True)\
-            .execute()
-        
-        return jsonify({'weeks': response.data}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
 @bp.route('/api/weeks', methods=['POST'])
 @require_admin
 def create_week():

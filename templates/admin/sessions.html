@@ -210,13 +210,15 @@
             
             showLoading();
             try {
+                const activeGrade = parseInt(localStorage.getItem('selected_grade') || '11');
                 await adminPanel.createSession({
                     event_id: eventId,
                     name: name,
                     session_number: parseInt(number),
                     start_date: startDate || null,
                     end_date: endDate || null,
-                    language: window.APP_LANG  // attach to the current language side
+                    language: window.APP_LANG,  // attach to the current language side
+                    grade: activeGrade
                 });
                 
                 showAlert('Session created successfully', 'success');
